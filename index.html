@@ -105,12 +105,28 @@
                 try {
                     const response = await fetch(`${SCRIPT_URL}?action=getData`);
                     const data = await response.json();
-                    if (data.employees) setEmployees(data.employees);
+                    
+                    // Normalize Employee Keys (Handling lowercase/uppercase issues)
+                    if (data.employees) {
+                         const normalizedEmployees = data.employees.map(e => ({
+                            id: e.id || e.ID || e.employeeId || '',
+                            name: e.name || e.Name || e.employeeName || '',
+                            position: e.position || e.Position || '',
+                            mobile: e.mobile || e.Mobile || '',
+                            workTiming: e.workTiming || e.WorkTiming || ''
+                         })).filter(e => e.id); // Only keep valid records
+                         setEmployees(normalizedEmployees);
+                    }
+                    
                     if (data.attendance) {
                         const formattedAttendance = data.attendance.map(record => {
                             let dateStr = record.date;
                             if (dateStr && dateStr.includes('T')) dateStr = dateStr.split('T')[0];
-                            return { ...record, date: dateStr };
+                            return { 
+                                ...record, 
+                                employeeId: record.employeeId || record.id || record.ID, // Normalize
+                                date: dateStr 
+                            };
                         });
                         setAttendance(formattedAttendance);
                     }
@@ -127,7 +143,7 @@
                 } catch (error) { console.error(error); }
             };
 
-            // --- MAIN SUBMIT FUNCTION (FIXED) ---
+            // --- MAIN SUBMIT FUNCTION ---
             const submitDailyAttendance = async () => {
                 const currentRecords = getAttendanceForDate();
                 
@@ -138,12 +154,19 @@
                 
                 setSubmitting(true);
 
-                // FIX: Map the data to match Google Sheet Headers exactly
-                // Sheet expects: employeeId, employeeName, date, status, checkIn, checkOut
+                // FIX: Sending Multiple Key Variations to guarantee match
                 const formattedRecords = currentRecords.map(record => ({
-                    employeeId: record.id,           // Maps 'id' to 'employeeId'
-                    employeeName: record.name,       // Maps 'name' to 'employeeName'
-                    date: selectedDate,              // Ensures 'date' is always sent
+                    // Primary Keys (match standard)
+                    employeeId: record.id,
+                    employeeName: record.name,
+                    date: selectedDate,
+                    
+                    // Backup Keys (match common variations)
+                    id: record.id,       
+                    name: record.name,
+                    Date: selectedDate,
+                    
+                    // Data
                     status: record.status,
                     checkIn: record.checkIn,
                     checkOut: record.checkOut

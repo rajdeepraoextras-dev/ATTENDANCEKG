@@ -1,39 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Khanago Attendance</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Khanago Attendance</title>
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- React -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+body {
+  font-family: Calibri, Arial, sans-serif;
+  background-color: #f3f4f6;
+}
+</style>
 
-  <style>
-    body {
-      font-family: Calibri, Arial, sans-serif;
-      background-color: #f3f4f6;
-    }
-  </style>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              600: "#ea580c",
-              700: "#c2410c"
-            }
-          }
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          600: '#ea580c',
+          700: '#c2410c'
         }
       }
     }
-  </script>
+  }
+}
+</script>
 </head>
 
 <body class="text-gray-800">
@@ -42,15 +39,15 @@
 <script type="text/babel">
 const { useState, useEffect } = React;
 
-/* 🔗 YOUR GOOGLE SCRIPT URL */
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbxpGLcnF_rVOYtKwlZFjjvT_v1jM8mP2_KqMttXracLlPO9qeFYfVKi6jlBoQ-KgmYy5Q/exec";
+"https://script.google.com/macros/s/AKfycbxpGLcnF_rVOYtKwlZFjjvT_v1jM8mP2_KqMttXracLlPO9qeFYfVKi6jlBoQ-KgmYy5Q/exec";
 
-/* 📅 DATE FORMATTER */
+/* 🔒 DATE NORMALIZER (KEY FIX) */
 const formatDate = (d) => {
-  const date = new Date(d);
-  if (isNaN(date)) return "";
-  return date.toISOString().split("T")[0];
+  if (!d) return "";
+  const dt = new Date(d);
+  if (isNaN(dt)) return String(d).substring(0,10);
+  return dt.toISOString().split("T")[0];
 };
 
 function App() {
@@ -58,48 +55,50 @@ function App() {
   const [attendance, setAttendance] = useState([]);
   const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  /* 🔄 LOAD DATA */
-  useEffect(() => {
-    fetch(`${SCRIPT_URL}?action=getData`)
-      .then(r => r.json())
-      .then(data => {
-        setEmployees(data.employees || []);
-        setAttendance(
-          (data.attendance || []).map(a => ({
-            ...a,
-            employeeId: String(a.employeeId).trim(),
-            date: formatDate(a.date)
-          }))
-        );
-        setLoading(false);
-      });
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
-  /* 📌 GET ATTENDANCE FOR SELECTED DATE */
-  const dailyData = employees.map(emp => {
-    const record = attendance.find(
-      a =>
-        String(a.employeeId).trim() === String(emp.id).trim() &&
-        formatDate(a.date) === selectedDate
+  async function loadData() {
+    setLoading(true);
+    const res = await fetch(`${SCRIPT_URL}?action=getData`);
+    const data = await res.json();
+
+    setEmployees(data.employees || []);
+
+    /* ✅ FIX #1 — STRICT employeeId */
+    setAttendance((data.attendance || []).map(a => ({
+      ...a,
+      employeeId: String(a.employeeId).trim(),
+      date: formatDate(a.date)
+    })));
+
+    setLoading(false);
+  }
+
+  /* ✅ FIX #2 — DATE MATCHING */
+  const todayData = employees.map(emp => {
+    const rec = attendance.find(a =>
+      String(a.employeeId).trim() === String(emp.id).trim() &&
+      formatDate(a.date) === selectedDate
     );
 
     return {
       ...emp,
-      status: record?.status || "absent",
-      checkIn: record?.checkIn || "",
-      checkOut: record?.checkOut || ""
+      status: rec?.status || "absent",
+      checkIn: rec?.checkIn || "",
+      checkOut: rec?.checkOut || ""
     };
   });
 
-  /* 🟢 MARK STATUS */
-  const markStatus = (id, status) => {
+  function markStatus(id, status) {
     setAttendance(prev => {
-      const existing = prev.find(a => a.employeeId === id && a.date === selectedDate);
-      if (existing) {
+      const found = prev.find(a => a.employeeId === id && a.date === selectedDate);
+      if (found) {
         return prev.map(a =>
-          a.employeeId === id && a.date === selectedDate ? { ...a, status } : a
+          a.employeeId === id && a.date === selectedDate
+            ? { ...a, status }
+            : a
         );
       }
       const emp = employees.find(e => e.id === id);
@@ -112,13 +111,12 @@ function App() {
         checkOut: ""
       }];
     });
-  };
+  }
 
-  /* ⏱️ UPDATE TIME */
-  const updateTime = (id, field, value) => {
+  function updateTime(id, field, value) {
     setAttendance(prev => {
-      const existing = prev.find(a => a.employeeId === id && a.date === selectedDate);
-      if (existing) {
+      const found = prev.find(a => a.employeeId === id && a.date === selectedDate);
+      if (found) {
         return prev.map(a =>
           a.employeeId === id && a.date === selectedDate
             ? { ...a, [field]: value, status: value ? "present" : a.status }
@@ -135,12 +133,11 @@ function App() {
         checkOut: field === "checkOut" ? value : ""
       }];
     });
-  };
+  }
 
-  /* 💾 SAVE ATTENDANCE */
-  const saveAttendance = async () => {
-    setSaving(true);
-    for (const emp of dailyData) {
+  async function submitAttendance() {
+    setSubmitting(true);
+    for (const emp of todayData) {
       await fetch(`${SCRIPT_URL}?action=saveAttendance`, {
         method: "POST",
         body: JSON.stringify({
@@ -153,68 +150,59 @@ function App() {
         })
       });
     }
-    alert("✅ Attendance saved successfully");
-    setSaving(false);
-  };
+    alert("✅ Attendance saved");
+    setSubmitting(false);
+    loadData();
+  }
 
   if (loading) {
     return <div className="text-center mt-20 font-bold">Loading...</div>;
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 pb-28">
+    <div className="max-w-4xl mx-auto p-4 pb-32">
+
       <div className="bg-gradient-to-r from-brand-600 to-brand-700 text-white p-6 rounded-2xl shadow-lg text-center">
-        <h1 className="text-3xl font-extrabold uppercase">KHANAGO</h1>
-        <p className="text-sm tracking-widest">Attendance System</p>
+        <h1 className="text-4xl font-extrabold tracking-widest">KHANAGO</h1>
+        <p className="text-sm tracking-widest uppercase">Attendance System</p>
         <input
           type="date"
           value={selectedDate}
           onChange={e => setSelectedDate(e.target.value)}
-          className="mt-4 text-black p-2 rounded"
+          className="mt-4 p-2 rounded text-black font-bold"
         />
       </div>
 
       <div className="mt-6 space-y-4">
-        {dailyData.map(emp => (
-          <div key={emp.id} className="bg-white rounded-xl p-4 shadow">
-            <div className="flex justify-between">
+        {todayData.map(emp => (
+          <div key={emp.id} className="bg-white rounded-xl p-4 shadow-md border">
+            <div className="flex justify-between mb-2">
               <div>
-                <div className="font-bold">{emp.name}</div>
-                <div className="text-xs text-gray-500">{emp.position}</div>
+                <div className="font-bold text-lg">{emp.name}</div>
+                <div className="text-xs text-gray-500 uppercase">{emp.position}</div>
               </div>
-              <div className="text-xs font-mono">#{emp.id}</div>
+              <div className="font-mono text-xs">#{emp.id}</div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-3">
-              <input
-                type="time"
-                value={emp.checkIn}
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <input type="time" value={emp.checkIn}
                 onChange={e => updateTime(emp.id, "checkIn", e.target.value)}
-                className="border p-2 rounded"
-              />
-              <input
-                type="time"
-                value={emp.checkOut}
+                className="border p-2 rounded"/>
+              <input type="time" value={emp.checkOut}
                 onChange={e => updateTime(emp.id, "checkOut", e.target.value)}
-                className="border p-2 rounded"
-              />
+                className="border p-2 rounded"/>
             </div>
 
-            <div className="flex gap-2 mt-3">
-              {["present", "absent", "leave"].map(s => (
-                <button
-                  key={s}
+            <div className="flex gap-2">
+              {["present","absent","leave"].map(s => (
+                <button key={s}
                   onClick={() => markStatus(emp.id, s)}
-                  className={`flex-1 py-2 rounded font-bold uppercase text-xs ${
-                    emp.status === s
-                      ? s === "present"
-                        ? "bg-green-600 text-white"
-                        : s === "absent"
-                        ? "bg-red-600 text-white"
-                        : "bg-yellow-500 text-white"
-                      : "bg-gray-200"
-                  }`}
-                >
+                  className={`flex-1 py-2 rounded text-xs font-bold uppercase
+                    ${emp.status===s
+                      ? s==="present"?"bg-green-600 text-white"
+                        : s==="absent"?"bg-red-600 text-white"
+                        :"bg-yellow-500 text-white"
+                      :"bg-gray-200"}`}>
                   {s}
                 </button>
               ))}
@@ -225,13 +213,13 @@ function App() {
 
       <div className="fixed bottom-6 left-0 right-0 flex justify-center">
         <button
-          onClick={saveAttendance}
-          disabled={saving}
-          className="bg-green-600 text-white font-extrabold px-10 py-4 rounded-full shadow-xl"
-        >
-          {saving ? "Saving..." : "SUBMIT ATTENDANCE"}
+          onClick={submitAttendance}
+          disabled={submitting}
+          className="bg-green-600 text-white px-12 py-4 rounded-full font-extrabold shadow-xl">
+          {submitting ? "Saving..." : "SUBMIT ATTENDANCE"}
         </button>
       </div>
+
     </div>
   );
 }
@@ -240,4 +228,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
-

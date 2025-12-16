@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Khanago Attendance System</title>
+    <title>Khanago Attendance</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -13,60 +13,83 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* Custom Mobile Styles */
+        /* Force Calibri Font */
+        @font-face {
+            font-family: 'Calibri';
+            src: local('Calibri'), local('Calibri-Regular'), local('Arial');
+        }
+        
+        body {
+            font-family: 'Calibri', 'Segoe UI', Candara, Segoe, Optima, Arial, sans-serif;
+            background-color: #f3f4f6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Hide scrollbar for clean UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Mobile specific adjustments */
         @media (max-width: 768px) {
-            .mobile-card-view thead { display: none; }
-            .mobile-card-view tr {
-                display: block;
-                margin-bottom: 1rem;
+            .mobile-card {
                 background: white;
-                border: 1px solid #e5e7eb;
-                border-radius: 0.5rem;
-                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                border-radius: 1rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+                border: 1px solid #f3f4f6;
             }
-            .mobile-card-view td {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 0.75rem 1rem;
-                border-bottom: 1px solid #f3f4f6;
-                text-align: right;
-            }
-            .mobile-card-view td:last-child { border-bottom: none; }
-            .mobile-card-view td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                color: #374151;
-                text-align: left;
-                margin-right: 1rem;
-            }
-            /* Adjust inputs in mobile view */
-            .mobile-card-view input[type="time"] {
-                width: auto;
-                max-width: 120px;
-            }
+            .desktop-only { display: none; }
+        }
+        
+        @media (min-width: 769px) {
+            .mobile-only { display: none; }
         }
     </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-100 pb-10">
+<body class="text-gray-800">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
 
         // --- ICONS ---
-        const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>;
-        const UsersIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
-        const ClockIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
-        const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>;
-        const Trash2Icon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>;
-        const Edit2Icon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>;
-        const CheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
-        const DownloadIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>;
+        const Icons = {
+            Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>,
+            Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+            Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+            Download: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
+            Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
+            Edit: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+            Save: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        };
 
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpGLcnF_rVOYtKwlZFjjvT_v1jM8mP2_KqMttXracLlPO9qeFYfVKi6jlBoQ-KgmYy5Q/exec";
 
-        function EmployeeAttendanceSystem() {
+        function App() {
             const [activeTab, setActiveTab] = useState('attendance');
             const [employees, setEmployees] = useState([]);
             const [attendance, setAttendance] = useState([]);
@@ -94,9 +117,7 @@
                         });
                         setAttendance(formattedAttendance);
                     }
-                } catch (error) {
-                    console.error("Error fetching data:", error);
-                }
+                } catch (error) { console.error(error); }
                 setLoading(false);
             };
 
@@ -105,7 +126,7 @@
                     await fetch(`${SCRIPT_URL}?action=${action}`, {
                         method: "POST", body: JSON.stringify(payload)
                     });
-                } catch (error) { console.error(`Error executing ${action}:`, error); }
+                } catch (error) { console.error(error); }
             };
 
             const addEmployee = async () => {
@@ -114,11 +135,11 @@
                     setEmployees([...employees, empData]);
                     setNewEmployee({ id: '', name: '', position: '', mobile: '', workTiming: '' });
                     await sendToSheet('saveEmployee', empData);
-                } else { alert("Please fill in ID and Name."); }
+                } else { alert("ID and Name are required"); }
             };
 
             const deleteEmployee = async (id) => {
-                if (window.confirm("Delete this employee?")) {
+                if (window.confirm("Delete employee?")) {
                     setEmployees(employees.filter(emp => emp.id !== id));
                     setAttendance(attendance.filter(att => att.employeeId !== id));
                     await fetch(`${SCRIPT_URL}?action=deleteEmployee&id=${id}`);
@@ -170,244 +191,220 @@
             const getAttendanceForDate = () => {
                 return employees.map(emp => {
                     const att = attendance.find(a => a.employeeId === emp.id && a.date === selectedDate);
-                    return {
-                        ...emp,
-                        status: att?.status || 'absent',
-                        checkIn: att?.checkIn || '',
-                        checkOut: att?.checkOut || ''
-                    };
+                    return { ...emp, status: att?.status || 'absent', checkIn: att?.checkIn || '', checkOut: att?.checkOut || '' };
                 });
             };
 
-            const getAttendanceStats = () => {
+            const stats = (() => {
                 const dateAttendance = attendance.filter(a => a.date === selectedDate);
                 const present = dateAttendance.filter(a => a.status === 'present').length;
                 const leave = dateAttendance.filter(a => a.status === 'leave').length;
                 const marked = present + leave;
                 const absent = employees.length - marked;
                 return { present, absent, leave };
-            };
+            })();
 
-            const exportToGoogleSheets = () => {
-                const attendanceData = getAttendanceForDate();
-                let csvContent = "Employee ID,Name,Position,Mobile,Work Timing,Date,Check In,Check Out,Status\n";
-                attendanceData.forEach(emp => {
-                    csvContent += `${emp.id},${emp.name},${emp.position},${emp.mobile},${emp.workTiming},${selectedDate},${emp.checkIn || '-'},${emp.checkOut || '-'},${emp.status}\n`;
-                });
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const exportCSV = () => {
+                const data = getAttendanceForDate();
+                let csv = "ID,Name,Position,Mobile,Date,In,Out,Status\n";
+                data.forEach(e => csv += `${e.id},${e.name},${e.position},${e.mobile},${selectedDate},${e.checkIn},${e.checkOut},${e.status}\n`);
                 const link = document.createElement('a');
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', `Khanago_Attendance_${selectedDate}.csv`);
-                document.body.appendChild(link);
+                link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                link.download = `Khanago_${selectedDate}.csv`;
                 link.click();
-                document.body.removeChild(link);
             };
-
-            const stats = getAttendanceStats();
 
             return (
-                <div className="min-h-screen bg-gray-100 font-sans sm:p-4">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="bg-white sm:rounded-2xl shadow-xl overflow-hidden min-h-screen sm:min-h-0">
-                            
-                            {/* Sticky Header */}
-                            <div className="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-4 sticky top-0 z-10 shadow-md">
-                                <h1 className="text-xl sm:text-3xl font-bold flex items-center gap-2">
-                                    <CalendarIcon />
-                                    <span>Khanago Attendance</span>
-                                    {loading && <span className="text-xs font-normal bg-orange-700 px-2 py-0.5 rounded animate-pulse">Syncing...</span>}
-                                </h1>
+                <div className="min-h-screen pb-20">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg pb-12 pt-6 px-4 sm:px-8 rounded-b-[2rem]">
+                        <div className="max-w-4xl mx-auto flex justify-between items-center">
+                            <div>
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Khanago</h1>
+                                <p className="text-brand-100 opacity-90 text-sm">Attendance System</p>
                             </div>
-
-                            {/* Navigation Tabs */}
-                            <div className="flex border-b bg-white">
-                                <button
+                            {loading && <div className="bg-white/20 px-3 py-1 rounded-full text-xs animate-pulse">Syncing...</div>}
+                        </div>
+                        
+                        {/* Navigation Pills */}
+                        <div className="max-w-4xl mx-auto mt-6">
+                            <div className="bg-black/20 p-1 rounded-xl flex gap-1 backdrop-blur-sm">
+                                <button 
                                     onClick={() => setActiveTab('attendance')}
-                                    className={`flex-1 flex justify-center items-center gap-2 py-3 sm:py-4 text-sm sm:text-base font-medium transition-colors ${
-                                        activeTab === 'attendance' ? 'border-b-2 border-orange-600 text-orange-600' : 'text-gray-500 hover:text-orange-600'
+                                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                                        activeTab === 'attendance' ? 'bg-white text-brand-700 shadow-md' : 'text-white/80 hover:bg-white/10'
                                     }`}
                                 >
-                                    <ClockIcon /> Attendance
+                                    <Icons.Clock /> Attendance
                                 </button>
-                                <button
+                                <button 
                                     onClick={() => setActiveTab('employees')}
-                                    className={`flex-1 flex justify-center items-center gap-2 py-3 sm:py-4 text-sm sm:text-base font-medium transition-colors ${
-                                        activeTab === 'employees' ? 'border-b-2 border-orange-600 text-orange-600' : 'text-gray-500 hover:text-orange-600'
+                                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                                        activeTab === 'employees' ? 'bg-white text-brand-700 shadow-md' : 'text-white/80 hover:bg-white/10'
                                     }`}
                                 >
-                                    <UsersIcon /> Employees
+                                    <Icons.Users /> Employees
                                 </button>
                             </div>
+                        </div>
+                    </div>
 
-                            {/* Main Content Area */}
-                            <div className="p-4 sm:p-6">
-                                {activeTab === 'attendance' ? (
-                                    <div>
-                                        {/* Date & Stats Section */}
-                                        <div className="flex flex-col gap-4 mb-6">
-                                            <div className="w-full">
-                                                <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Date</label>
-                                                <input
-                                                    type="date"
-                                                    value={selectedDate}
-                                                    onChange={(e) => setSelectedDate(e.target.value)}
-                                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-orange-500 outline-none"
-                                                />
+                    <div className="max-w-4xl mx-auto px-4 -mt-6">
+                        {activeTab === 'attendance' ? (
+                            <div className="space-y-6">
+                                {/* Stats Card */}
+                                <div className="bg-white rounded-2xl shadow-lg p-5 border border-gray-100">
+                                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-4">
+                                        <input 
+                                            type="date" 
+                                            value={selectedDate} 
+                                            onChange={(e) => setSelectedDate(e.target.value)}
+                                            className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block w-full sm:w-auto p-2.5 font-semibold"
+                                        />
+                                        <button onClick={exportCSV} className="text-brand-600 text-sm font-semibold flex items-center gap-1 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors">
+                                            <Icons.Download /> Export CSV
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="text-center p-3 bg-green-50 rounded-xl border border-green-100">
+                                            <div className="text-2xl font-bold text-green-600">{stats.present}</div>
+                                            <div className="text-xs text-green-700 font-medium uppercase tracking-wider">Present</div>
+                                        </div>
+                                        <div className="text-center p-3 bg-red-50 rounded-xl border border-red-100">
+                                            <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
+                                            <div className="text-xs text-red-700 font-medium uppercase tracking-wider">Absent</div>
+                                        </div>
+                                        <div className="text-center p-3 bg-yellow-50 rounded-xl border border-yellow-100">
+                                            <div className="text-2xl font-bold text-yellow-600">{stats.leave}</div>
+                                            <div className="text-xs text-yellow-700 font-medium uppercase tracking-wider">Leave</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* List */}
+                                <div className="space-y-4">
+                                    {getAttendanceForDate().map(emp => (
+                                        <div key={emp.id} className="mobile-card sm:bg-white sm:rounded-xl sm:shadow-sm sm:border sm:border-gray-200 sm:p-4 hover:shadow-md transition-shadow">
+                                            {/* Card Header */}
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-gray-900">{emp.name}</h3>
+                                                    <p className="text-sm text-gray-500">{emp.position}</p>
+                                                </div>
+                                                <div className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">
+                                                    {emp.id}
+                                                </div>
                                             </div>
-                                            
-                                            <div className="grid grid-cols-3 gap-2 text-center">
-                                                <div className="bg-green-50 p-2 rounded-lg border border-green-100">
-                                                    <p className="text-xs text-green-600 font-bold uppercase">Present</p>
-                                                    <p className="text-xl font-bold text-green-700">{stats.present}</p>
+
+                                            {/* Times */}
+                                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                                <div>
+                                                    <label className="text-xs font-medium text-gray-500 mb-1 block">Check In</label>
+                                                    <input 
+                                                        type="time" 
+                                                        value={emp.checkIn} 
+                                                        onChange={(e) => updateAttendanceTimes(emp.id, 'checkIn', e.target.value)}
+                                                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500 block p-2"
+                                                    />
                                                 </div>
-                                                <div className="bg-red-50 p-2 rounded-lg border border-red-100">
-                                                    <p className="text-xs text-red-600 font-bold uppercase">Absent</p>
-                                                    <p className="text-xl font-bold text-red-700">{stats.absent}</p>
+                                                <div>
+                                                    <label className="text-xs font-medium text-gray-500 mb-1 block">Check Out</label>
+                                                    <input 
+                                                        type="time" 
+                                                        value={emp.checkOut} 
+                                                        onChange={(e) => updateAttendanceTimes(emp.id, 'checkOut', e.target.value)}
+                                                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500 block p-2"
+                                                    />
                                                 </div>
-                                                <div className="bg-yellow-50 p-2 rounded-lg border border-yellow-100">
-                                                    <p className="text-xs text-yellow-600 font-bold uppercase">Leave</p>
-                                                    <p className="text-xl font-bold text-yellow-700">{stats.leave}</p>
-                                                </div>
+                                            </div>
+
+                                            {/* Status Pills */}
+                                            <div className="flex bg-gray-100 p-1 rounded-lg">
+                                                {['present', 'absent', 'leave'].map(status => (
+                                                    <button
+                                                        key={status}
+                                                        onClick={() => markAttendance(emp.id, status)}
+                                                        className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${
+                                                            emp.status === status
+                                                                ? status === 'present' 
+                                                                    ? 'bg-green-500 text-white shadow-sm' 
+                                                                    : status === 'absent' 
+                                                                        ? 'bg-red-500 text-white shadow-sm' 
+                                                                        : 'bg-yellow-500 text-white shadow-sm'
+                                                                : 'text-gray-500 hover:bg-gray-200'
+                                                        }`}
+                                                    >
+                                                        {status}
+                                                    </button>
+                                                ))}
                                             </div>
                                         </div>
-
-                                        <button onClick={exportToGoogleSheets} className="w-full sm:w-auto mb-6 px-4 py-3 bg-gray-800 text-white rounded-lg flex justify-center items-center gap-2 text-sm font-medium hover:bg-gray-900">
-                                            <DownloadIcon /> Download CSV
-                                        </button>
-
-                                        {/* Attendance List (Responsive Table) */}
-                                        <table className="w-full mobile-card-view">
-                                            <thead className="bg-orange-50">
-                                                <tr>
-                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Employee</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">In Time</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Out Time</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-200">
-                                                {getAttendanceForDate().map((emp) => (
-                                                    <tr key={emp.id} className="hover:bg-orange-50">
-                                                        <td className="px-6 py-4" data-label="Employee">
-                                                            <div className="flex flex-col text-left">
-                                                                <span className="font-medium text-gray-900">{emp.name}</span>
-                                                                <span className="text-xs text-gray-500">{emp.position}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4" data-label="In Time">
-                                                            <input
-                                                                type="time"
-                                                                value={emp.checkIn}
-                                                                onChange={(e) => updateAttendanceTimes(emp.id, 'checkIn', e.target.value)}
-                                                                className="p-2 border border-gray-300 rounded focus:border-orange-500 outline-none w-full"
-                                                            />
-                                                        </td>
-                                                        <td className="px-6 py-4" data-label="Out Time">
-                                                            <input
-                                                                type="time"
-                                                                value={emp.checkOut}
-                                                                onChange={(e) => updateAttendanceTimes(emp.id, 'checkOut', e.target.value)}
-                                                                className="p-2 border border-gray-300 rounded focus:border-orange-500 outline-none w-full"
-                                                            />
-                                                        </td>
-                                                        <td className="px-6 py-4" data-label="Status">
-                                                            <div className="flex gap-1 justify-end w-full">
-                                                                {['present', 'absent', 'leave'].map((status) => (
-                                                                    <button
-                                                                        key={status}
-                                                                        onClick={() => markAttendance(emp.id, status)}
-                                                                        className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold capitalize transition-all ${
-                                                                            emp.status === status
-                                                                                ? status === 'present' ? 'bg-green-600 text-white shadow-lg scale-110' : status === 'absent' ? 'bg-red-600 text-white shadow-lg scale-110' : 'bg-yellow-500 text-white shadow-lg scale-110'
-                                                                                : 'bg-gray-100 text-gray-400'
-                                                                        }`}
-                                                                    >
-                                                                        {status.charAt(0).toUpperCase()}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                                {getAttendanceForDate().length === 0 && (
-                                                    <tr><td colSpan="4" className="text-center p-6 text-gray-500">No employees found.</td></tr>
-                                                )}
-                                            </tbody>
-                                        </table>
+                                    ))}
+                                    
+                                    {getAttendanceForDate().length === 0 && (
+                                        <div className="text-center py-12 text-gray-400">
+                                            <div className="bg-white inline-block p-4 rounded-full shadow-sm mb-3">
+                                                <Icons.Users />
+                                            </div>
+                                            <p>No employees found.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {/* Add Employee Form */}
+                                <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                                    <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Add New Employee</h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <input type="text" placeholder="ID (e.g. 001)" value={newEmployee.id} onChange={(e) => setNewEmployee({ ...newEmployee, id: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-brand-500 focus:border-brand-500 outline-none" />
+                                        <input type="text" placeholder="Full Name" value={newEmployee.name} onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-brand-500 focus:border-brand-500 outline-none" />
+                                        <input type="text" placeholder="Position" value={newEmployee.position} onChange={(e) => setNewEmployee({ ...newEmployee, position: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-brand-500 focus:border-brand-500 outline-none" />
+                                        <input type="tel" placeholder="Mobile" value={newEmployee.mobile} onChange={(e) => setNewEmployee({ ...newEmployee, mobile: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-brand-500 focus:border-brand-500 outline-none" />
+                                        <input type="text" placeholder="Shift (e.g. 9-6)" value={newEmployee.workTiming} onChange={(e) => setNewEmployee({ ...newEmployee, workTiming: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-brand-500 focus:border-brand-500 outline-none" />
                                     </div>
-                                ) : (
-                                    <div className="space-y-6">
-                                        {/* Add Employee Card */}
-                                        <div className="bg-orange-50 rounded-xl p-4 sm:p-6 border border-orange-100">
-                                            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                                <PlusIcon /> Add Employee
-                                            </h2>
-                                            <div className="space-y-3">
-                                                <input type="text" placeholder="ID (e.g. 001)" value={newEmployee.id} onChange={(e) => setNewEmployee({ ...newEmployee, id: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:border-orange-500 outline-none" />
-                                                <input type="text" placeholder="Full Name" value={newEmployee.name} onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:border-orange-500 outline-none" />
-                                                <input type="text" placeholder="Position" value={newEmployee.position} onChange={(e) => setNewEmployee({ ...newEmployee, position: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:border-orange-500 outline-none" />
-                                                <input type="tel" placeholder="Mobile Number" value={newEmployee.mobile} onChange={(e) => setNewEmployee({ ...newEmployee, mobile: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:border-orange-500 outline-none" />
-                                                <input type="text" placeholder="Work Timing" value={newEmployee.workTiming} onChange={(e) => setNewEmployee({ ...newEmployee, workTiming: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:border-orange-500 outline-none" />
-                                                <button onClick={addEmployee} className="w-full px-6 py-3 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 flex items-center justify-center gap-2 mt-2">
-                                                    Save Employee
+                                    <button onClick={addEmployee} className="mt-4 w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-brand-500/30 transition-all active:scale-[0.98]">
+                                        Save Employee
+                                    </button>
+                                </div>
+
+                                {/* List */}
+                                <div className="space-y-3">
+                                    {employees.map(emp => (
+                                        <div key={emp.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">#{emp.id}</span>
+                                                    {editingId === emp.id ? (
+                                                        <input value={emp.name} onChange={(e) => updateEmployee(emp.id, 'name', e.target.value)} className="border rounded px-1 text-sm font-bold w-full" />
+                                                    ) : (
+                                                        <span className="font-bold text-gray-800">{emp.name}</span>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {emp.position} • {emp.mobile}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 ml-4">
+                                                <button onClick={() => setEditingId(editingId === emp.id ? null : emp.id)} className={`p-2 rounded-lg bg-gray-50 ${editingId === emp.id ? 'text-green-600' : 'text-gray-400 hover:text-brand-500'}`}>
+                                                    {editingId === emp.id ? <Icons.Save /> : <Icons.Edit />}
+                                                </button>
+                                                <button onClick={() => deleteEmployee(emp.id)} className="p-2 rounded-lg bg-red-50 text-red-400 hover:text-red-600 hover:bg-red-100">
+                                                    <Icons.Trash />
                                                 </button>
                                             </div>
                                         </div>
-
-                                        {/* Employee List */}
-                                        <div>
-                                            <h2 className="text-lg font-bold text-gray-800 mb-4">Employee List</h2>
-                                            <table className="w-full mobile-card-view">
-                                                <thead className="bg-orange-50">
-                                                    <tr>
-                                                        <th className="px-6 py-3 text-left text-xs uppercase text-gray-700">ID</th>
-                                                        <th className="px-6 py-3 text-left text-xs uppercase text-gray-700">Name</th>
-                                                        <th className="px-6 py-3 text-left text-xs uppercase text-gray-700">Details</th>
-                                                        <th className="px-6 py-3 text-left text-xs uppercase text-gray-700">Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-200">
-                                                    {employees.map((emp) => (
-                                                        <tr key={emp.id}>
-                                                            <td className="px-6 py-4" data-label="ID">
-                                                                <span className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">{emp.id}</span>
-                                                            </td>
-                                                            <td className="px-6 py-4" data-label="Name">
-                                                                {editingId === emp.id ? <input className="border p-1 w-full" value={emp.name} onChange={(e) => updateEmployee(emp.id, 'name', e.target.value)} /> : <span className="font-medium">{emp.name}</span>}
-                                                            </td>
-                                                            <td className="px-6 py-4" data-label="Details">
-                                                                <div className="text-sm text-gray-600 text-right">
-                                                                    <div>{emp.position}</div>
-                                                                    <div>{emp.mobile}</div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-6 py-4" data-label="Actions">
-                                                                <div className="flex gap-4 justify-end">
-                                                                    {editingId === emp.id ? (
-                                                                        <button onClick={() => setEditingId(null)} className="text-green-600 font-medium">Save</button>
-                                                                    ) : (
-                                                                        <button onClick={() => setEditingId(emp.id)} className="text-orange-600"><Edit2Icon /></button>
-                                                                    )}
-                                                                    <button onClick={() => deleteEmployee(emp.id)} className="text-red-600"><Trash2Icon /></button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                )}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             );
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<EmployeeAttendanceSystem />);
+        root.render(<App />);
     </script>
 </body>
 </html>

@@ -38,18 +38,22 @@
 
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpGLcnF_rVOYtKwlZFjjvT_v1jM8mP2_KqMttXracLlPO9qeFYfVKi6jlBoQ-KgmYy5Q/exec";
 
-        const formatDate = (dateInput) => {
-            if (!dateInput) return new Date().toISOString().split('T')[0];
-            const d = new Date(dateInput);
-            if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
-            return d.toISOString().split('T')[0];
+        // --- DATE NORMALIZER (Fixes the "Wrong Value" issue) ---
+        const normalizeDate = (inputDate) => {
+            if (!inputDate) return "";
+            // If it comes from Google Sheets as "2025-12-16T18:30:00.000Z", we just want the first 10 chars
+            const dateStr = String(inputDate);
+            if (dateStr.length >= 10) {
+                return dateStr.substring(0, 10); 
+            }
+            return dateStr;
         };
 
         function App() {
             const [activeTab, setActiveTab] = useState('attendance');
             const [employees, setEmployees] = useState([]);
             const [attendance, setAttendance] = useState([]);
-            const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
+            const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
             const [editingId, setEditingId] = useState(null);
             const [loading, setLoading] = useState(true);
             const [submitting, setSubmitting] = useState(false);
@@ -77,16 +81,18 @@
                     
                     if (data.attendance) {
                         const formattedAttendance = data.attendance.map(record => {
-                            let rawDate = record.date || record.Date;
                             return { 
                                 ...record, 
                                 employeeId: String(record.employeeId || record.id || record.ID || '').trim(), 
-                                date: formatDate(rawDate) 
+                                date: normalizeDate(record.date || record.Date) 
                             };
                         });
                         setAttendance(formattedAttendance);
                     }
-                } catch (error) { console.error("Fetch Error:", error); alert("Network error: Could not load data."); }
+                } catch (error) { 
+                    console.error("Fetch Error:", error); 
+                    alert("Network error: Could not load data."); 
+                }
                 setLoading(false);
             };
 
@@ -102,7 +108,6 @@
                 
                 setSubmitting(true);
                 
-                // Normalizing IDs to Lowercase for storage to ensure consistency
                 const formattedRecords = currentRecords.map(record => ({
                     employeeId: String(record.id).trim(),
                     employeeName: record.name,
@@ -119,7 +124,7 @@
                 try {
                     await Promise.all(promises);
                     alert("✅ Attendance Saved Successfully!");
-                    fetchData(); // Refresh to ensure UI matches Backend
+                    fetchData(); // Force reload to show saved data immediately
                 } catch (error) {
                     alert("❌ Error submitting. Please try again.");
                 }
@@ -149,9 +154,9 @@
 
             const updateAttendanceTimes = (employeeId, field, value) => {
                 setAttendance(prev => {
-                    const existing = prev.find(a => a.employeeId === employeeId && a.date === selectedDate);
+                    const existing = prev.find(a => String(a.employeeId).trim().toLowerCase() === String(employeeId).trim().toLowerCase() && a.date === selectedDate);
                     if (existing) {
-                        return prev.map(a => a.employeeId === employeeId && a.date === selectedDate ? { ...a, [field]: value } : a);
+                        return prev.map(a => String(a.employeeId).trim().toLowerCase() === String(employeeId).trim().toLowerCase() && a.date === selectedDate ? { ...a, [field]: value } : a);
                     } else {
                         const employee = employees.find(e => e.id === employeeId);
                         const newRecord = { employeeId, employeeName: employee.name, date: selectedDate, status: 'absent', checkIn: field === 'checkIn' ? value : '', checkOut: field === 'checkOut' ? value : '' };
@@ -162,9 +167,9 @@
 
             const markAttendance = (employeeId, status) => {
                 setAttendance(prev => {
-                    const existing = prev.find(a => a.employeeId === employeeId && a.date === selectedDate);
+                    const existing = prev.find(a => String(a.employeeId).trim().toLowerCase() === String(employeeId).trim().toLowerCase() && a.date === selectedDate);
                     if (existing) {
-                        return prev.map(a => a.employeeId === employeeId && a.date === selectedDate ? { ...a, status } : a);
+                        return prev.map(a => String(a.employeeId).trim().toLowerCase() === String(employeeId).trim().toLowerCase() && a.date === selectedDate ? { ...a, status } : a);
                     } else {
                         const employee = employees.find(e => e.id === employeeId);
                         const newRecord = { employeeId, employeeName: employee.name, date: selectedDate, status, checkIn: '', checkOut: '' };
@@ -173,10 +178,12 @@
                 });
             };
 
-            // --- CRITICAL FIX: CASE INSENSITIVE ID MATCHING ---
+            // --- CRITICAL FIX: CASE INSENSITIVE ID & STRICT DATE MATCHING ---
             const getAttendanceForDate = () => {
                 return employees.map(emp => {
-                    // Convert both to LowerCase string and trim for perfect matching
+                    // Match Logic: 
+                    // 1. Employee ID matches (case insensitive)
+                    // 2. Date matches exactly
                     const att = attendance.find(a => 
                         String(a.employeeId).trim().toLowerCase() === String(emp.id).trim().toLowerCase() && 
                         a.date === selectedDate

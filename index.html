@@ -13,38 +13,10 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* Force Calibri Font */
-        @font-face {
-            font-family: 'Calibri';
-            src: local('Calibri'), local('Calibri-Regular'), local('Arial');
-        }
-        
-        body {
-            font-family: 'Calibri', 'Segoe UI', Candara, Segoe, Optima, Arial, sans-serif;
-            background-color: #f3f4f6;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* Hide scrollbar for clean UI */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* Mobile specific adjustments */
-        @media (max-width: 768px) {
-            .mobile-card {
-                background: white;
-                border-radius: 1rem;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-                border: 1px solid #f3f4f6;
-            }
-        }
+        @font-face { font-family: 'Calibri'; src: local('Calibri'), local('Calibri-Regular'), local('Arial'); }
+        body { font-family: 'Calibri', sans-serif; background-color: #f3f4f6; -webkit-font-smoothing: antialiased; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 
     <script>
@@ -52,13 +24,7 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            50: '#fff7ed',
-                            100: '#ffedd5',
-                            500: '#f97316',
-                            600: '#ea580c',
-                            700: '#c2410c',
-                        }
+                        brand: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c', 700: '#c2410c' }
                     }
                 }
             }
@@ -85,20 +51,30 @@
 
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpGLcnF_rVOYtKwlZFjjvT_v1jM8mP2_KqMttXracLlPO9qeFYfVKi6jlBoQ-KgmYy5Q/exec";
 
+        // --- HELPER: Format Date to YYYY-MM-DD reliably ---
+        const formatDate = (dateInput) => {
+            if (!dateInput) return new Date().toISOString().split('T')[0];
+            const d = new Date(dateInput);
+            if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
+            return d.toISOString().split('T')[0];
+        };
+
         function App() {
             const [activeTab, setActiveTab] = useState('attendance');
             const [employees, setEmployees] = useState([]);
             const [attendance, setAttendance] = useState([]);
-            const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+            const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
             const [editingId, setEditingId] = useState(null);
-            const [loading, setLoading] = useState(false);
+            const [loading, setLoading] = useState(true); // Default to true so we don't show empty state initially
             const [submitting, setSubmitting] = useState(false);
             
             const [newEmployee, setNewEmployee] = useState({
                 id: '', name: '', position: '', mobile: '', workTiming: ''
             });
 
-            useEffect(() => { fetchData(); }, []);
+            useEffect(() => { 
+                fetchData(); 
+            }, []);
 
             const fetchData = async () => {
                 setLoading(true);
@@ -106,35 +82,38 @@
                     const response = await fetch(`${SCRIPT_URL}?action=getData`);
                     const data = await response.json();
                     
-                    // Normalize Employee Keys (Handling lowercase/uppercase issues)
+                    // 1. Process Employees
                     if (data.employees) {
                          const normalizedEmployees = data.employees.map(e => ({
-                            id: e.id || e.ID || e.employeeId || '',
+                            id: String(e.id || e.ID || e.employeeId || '').trim(),
                             name: e.name || e.Name || e.employeeName || '',
                             position: e.position || e.Position || '',
                             mobile: e.mobile || e.Mobile || '',
                             workTiming: e.workTiming || e.WorkTiming || ''
-                         })).filter(e => e.id); // Only keep valid records
+                         })).filter(e => e.id); // Remove empty rows
                          setEmployees(normalizedEmployees);
                     }
                     
+                    // 2. Process Attendance
                     if (data.attendance) {
                         const formattedAttendance = data.attendance.map(record => {
-                            let dateStr = record.date;
-                            if (dateStr && dateStr.includes('T')) dateStr = dateStr.split('T')[0];
                             return { 
                                 ...record, 
-                                employeeId: record.employeeId || record.id || record.ID, // Normalize
-                                date: dateStr 
+                                // FORCE ID TO STRING to match employees
+                                employeeId: String(record.employeeId || record.id || record.ID || '').trim(), 
+                                // FORCE DATE TO YYYY-MM-DD
+                                date: formatDate(record.date || record.Date)
                             };
                         });
                         setAttendance(formattedAttendance);
                     }
-                } catch (error) { console.error(error); }
+                } catch (error) { 
+                    console.error("Fetch Error:", error);
+                    alert("Network error: Could not load data."); 
+                }
                 setLoading(false);
             };
 
-            // Single item save (used for Add Employee)
             const sendToSheet = async (action, payload) => {
                 try {
                     await fetch(`${SCRIPT_URL}?action=${action}`, {
@@ -154,22 +133,17 @@
                 
                 setSubmitting(true);
 
-                // FIX: Sending Multiple Key Variations to guarantee match
+                // Map data to match Google Sheet headers exactly
                 const formattedRecords = currentRecords.map(record => ({
-                    // Primary Keys (match standard)
-                    employeeId: record.id,
+                    employeeId: String(record.id).trim(),
                     employeeName: record.name,
-                    date: selectedDate,
-                    
-                    // Backup Keys (match common variations)
-                    id: record.id,       
-                    name: record.name,
-                    Date: selectedDate,
-                    
-                    // Data
+                    date: selectedDate, // Using the state selectedDate ensures consistency
                     status: record.status,
                     checkIn: record.checkIn,
-                    checkOut: record.checkOut
+                    checkOut: record.checkOut,
+                    // Backup keys just in case
+                    id: String(record.id).trim(),
+                    Date: selectedDate
                 }));
                 
                 const promises = formattedRecords.map(record => {
@@ -182,16 +156,17 @@
                 try {
                     await Promise.all(promises);
                     alert("✅ Attendance Submitted Successfully!");
+                    // OPTIONAL: Re-fetch data to ensure sync
+                    // await fetchData(); 
                 } catch (error) {
-                    alert("❌ Error submitting attendance. Please try again.");
-                    console.error(error);
+                    alert("❌ Error submitting. Please try again.");
                 }
                 setSubmitting(false);
             };
 
             const addEmployee = async () => {
                 if (newEmployee.id && newEmployee.name) {
-                    const empData = { ...newEmployee };
+                    const empData = { ...newEmployee, id: String(newEmployee.id).trim() };
                     setEmployees([...employees, empData]);
                     setNewEmployee({ id: '', name: '', position: '', mobile: '', workTiming: '' });
                     await sendToSheet('saveEmployee', empData);
@@ -210,7 +185,6 @@
                 setEmployees(employees.map(emp => emp.id === id ? { ...emp, [field]: value } : emp));
             };
 
-            // Only updates local state
             const updateAttendanceTimes = (employeeId, field, value) => {
                 setAttendance(prev => {
                     const existing = prev.find(a => a.employeeId === employeeId && a.date === selectedDate);
@@ -227,7 +201,6 @@
                 });
             };
 
-            // Only updates local state
             const markAttendance = (employeeId, status) => {
                 setAttendance(prev => {
                     const existing = prev.find(a => a.employeeId === employeeId && a.date === selectedDate);
@@ -244,10 +217,20 @@
                 });
             };
 
+            // --- CRITICAL: MATCHING LOGIC ---
             const getAttendanceForDate = () => {
                 return employees.map(emp => {
-                    const att = attendance.find(a => a.employeeId === emp.id && a.date === selectedDate);
-                    return { ...emp, status: att?.status || 'absent', checkIn: att?.checkIn || '', checkOut: att?.checkOut || '' };
+                    // Normalize both IDs to strings and trim whitespace for comparison
+                    const att = attendance.find(a => 
+                        String(a.employeeId).trim() === String(emp.id).trim() && 
+                        a.date === selectedDate
+                    );
+                    return { 
+                        ...emp, 
+                        status: att?.status || 'absent', 
+                        checkIn: att?.checkIn || '', 
+                        checkOut: att?.checkOut || '' 
+                    };
                 });
             };
 
@@ -279,8 +262,9 @@
                             <p className="text-brand-100 font-medium tracking-wide text-sm sm:text-base opacity-90 uppercase">Attendance System</p>
                             
                             {loading && (
-                                <div className="mt-3 bg-white/20 px-4 py-1 rounded-full text-xs font-semibold animate-pulse tracking-wide">
-                                    SYNCING...
+                                <div className="mt-3 bg-white/20 px-4 py-1 rounded-full text-xs font-semibold animate-pulse tracking-wide flex items-center gap-2">
+                                    <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    LOADING DATA...
                                 </div>
                             )}
                         </div>
@@ -309,7 +293,12 @@
                     </div>
 
                     <div className="max-w-4xl mx-auto px-4 -mt-6">
-                        {activeTab === 'attendance' ? (
+                        {loading && activeTab === 'attendance' ? (
+                             <div className="text-center py-20 bg-white rounded-2xl shadow-lg border border-gray-100">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
+                                <p className="text-gray-500 font-bold">Connecting to Google Sheets...</p>
+                             </div>
+                        ) : activeTab === 'attendance' ? (
                             <div className="space-y-6">
                                 {/* Stats Card */}
                                 <div className="bg-white rounded-2xl shadow-lg p-5 border border-gray-100">
@@ -415,10 +404,13 @@
                                     <button 
                                         onClick={submitDailyAttendance}
                                         disabled={submitting}
-                                        className="bg-green-600 hover:bg-green-700 text-white font-extrabold text-lg py-4 px-12 rounded-full shadow-2xl flex items-center gap-2 transform active:scale-95 transition-all disabled:opacity-70"
+                                        className="bg-green-600 hover:bg-green-700 text-white font-extrabold text-lg py-4 px-12 rounded-full shadow-2xl flex items-center gap-2 transform active:scale-95 transition-all disabled:opacity-70 disabled:transform-none"
                                     >
                                         {submitting ? (
-                                            <><span>SAVING...</span></>
+                                            <>
+                                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                <span>SAVING...</span>
+                                            </>
                                         ) : (
                                             <><Icons.Check /> SUBMIT ATTENDANCE</>
                                         )}

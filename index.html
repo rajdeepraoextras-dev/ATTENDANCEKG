@@ -44,11 +44,6 @@
                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
                 border: 1px solid #f3f4f6;
             }
-            .desktop-only { display: none; }
-        }
-        
-        @media (min-width: 769px) {
-            .mobile-only { display: none; }
         }
     </style>
 
@@ -217,33 +212,37 @@
             return (
                 <div className="min-h-screen pb-20">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg pb-12 pt-6 px-4 sm:px-8 rounded-b-[2rem]">
-                        <div className="max-w-4xl mx-auto flex justify-between items-center">
-                            <div>
-                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Khanago</h1>
-                                <p className="text-brand-100 opacity-90 text-sm">Attendance System</p>
-                            </div>
-                            {loading && <div className="bg-white/20 px-3 py-1 rounded-full text-xs animate-pulse">Syncing...</div>}
+                    <div className="bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg pb-12 pt-8 px-4 sm:px-8 rounded-b-[2rem]">
+                        <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
+                            
+                            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-widest uppercase mb-1 drop-shadow-sm">KHANAGO</h1>
+                            <p className="text-brand-100 font-medium tracking-wide text-sm sm:text-base opacity-90 uppercase">Attendance System</p>
+                            
+                            {loading && (
+                                <div className="mt-3 bg-white/20 px-4 py-1 rounded-full text-xs font-semibold animate-pulse tracking-wide">
+                                    SYNCING...
+                                </div>
+                            )}
                         </div>
                         
                         {/* Navigation Pills */}
-                        <div className="max-w-4xl mx-auto mt-6">
-                            <div className="bg-black/20 p-1 rounded-xl flex gap-1 backdrop-blur-sm">
+                        <div className="max-w-4xl mx-auto mt-8">
+                            <div className="bg-black/20 p-1.5 rounded-2xl flex gap-1 backdrop-blur-sm max-w-md mx-auto">
                                 <button 
                                     onClick={() => setActiveTab('attendance')}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                                        activeTab === 'attendance' ? 'bg-white text-brand-700 shadow-md' : 'text-white/80 hover:bg-white/10'
+                                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                                        activeTab === 'attendance' ? 'bg-white text-brand-700 shadow-lg transform scale-[1.02]' : 'text-white/80 hover:bg-white/10'
                                     }`}
                                 >
-                                    <Icons.Clock /> Attendance
+                                    <Icons.Clock /> ATTENDANCE
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab('employees')}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                                        activeTab === 'employees' ? 'bg-white text-brand-700 shadow-md' : 'text-white/80 hover:bg-white/10'
+                                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                                        activeTab === 'employees' ? 'bg-white text-brand-700 shadow-lg transform scale-[1.02]' : 'text-white/80 hover:bg-white/10'
                                     }`}
                                 >
-                                    <Icons.Users /> Employees
+                                    <Icons.Users /> EMPLOYEES
                                 </button>
                             </div>
                         </div>
@@ -259,24 +258,24 @@
                                             type="date" 
                                             value={selectedDate} 
                                             onChange={(e) => setSelectedDate(e.target.value)}
-                                            className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block w-full sm:w-auto p-2.5 font-semibold"
+                                            className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block w-full sm:w-auto p-2.5 font-bold uppercase"
                                         />
-                                        <button onClick={exportCSV} className="text-brand-600 text-sm font-semibold flex items-center gap-1 hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors">
+                                        <button onClick={exportCSV} className="text-brand-600 text-sm font-bold uppercase tracking-wide flex items-center gap-1 hover:bg-brand-50 px-4 py-2 rounded-lg transition-colors">
                                             <Icons.Download /> Export CSV
                                         </button>
                                     </div>
                                     <div className="grid grid-cols-3 gap-3">
                                         <div className="text-center p-3 bg-green-50 rounded-xl border border-green-100">
                                             <div className="text-2xl font-bold text-green-600">{stats.present}</div>
-                                            <div className="text-xs text-green-700 font-medium uppercase tracking-wider">Present</div>
+                                            <div className="text-xs text-green-700 font-bold uppercase tracking-wider">Present</div>
                                         </div>
                                         <div className="text-center p-3 bg-red-50 rounded-xl border border-red-100">
                                             <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
-                                            <div className="text-xs text-red-700 font-medium uppercase tracking-wider">Absent</div>
+                                            <div className="text-xs text-red-700 font-bold uppercase tracking-wider">Absent</div>
                                         </div>
                                         <div className="text-center p-3 bg-yellow-50 rounded-xl border border-yellow-100">
                                             <div className="text-2xl font-bold text-yellow-600">{stats.leave}</div>
-                                            <div className="text-xs text-yellow-700 font-medium uppercase tracking-wider">Leave</div>
+                                            <div className="text-xs text-yellow-700 font-bold uppercase tracking-wider">Leave</div>
                                         </div>
                                     </div>
                                 </div>
@@ -289,31 +288,31 @@
                                             <div className="flex justify-between items-start mb-4">
                                                 <div>
                                                     <h3 className="text-lg font-bold text-gray-900">{emp.name}</h3>
-                                                    <p className="text-sm text-gray-500">{emp.position}</p>
+                                                    <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">{emp.position}</p>
                                                 </div>
-                                                <div className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">
-                                                    {emp.id}
+                                                <div className="text-xs font-bold font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">
+                                                    #{emp.id}
                                                 </div>
                                             </div>
 
                                             {/* Times */}
                                             <div className="grid grid-cols-2 gap-4 mb-4">
                                                 <div>
-                                                    <label className="text-xs font-medium text-gray-500 mb-1 block">Check In</label>
+                                                    <label className="text-xs font-bold text-gray-400 mb-1 block uppercase">Check In</label>
                                                     <input 
                                                         type="time" 
                                                         value={emp.checkIn} 
                                                         onChange={(e) => updateAttendanceTimes(emp.id, 'checkIn', e.target.value)}
-                                                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500 block p-2"
+                                                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm font-semibold rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500 block p-2"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-medium text-gray-500 mb-1 block">Check Out</label>
+                                                    <label className="text-xs font-bold text-gray-400 mb-1 block uppercase">Check Out</label>
                                                     <input 
                                                         type="time" 
                                                         value={emp.checkOut} 
                                                         onChange={(e) => updateAttendanceTimes(emp.id, 'checkOut', e.target.value)}
-                                                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500 block p-2"
+                                                        className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm font-semibold rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500 block p-2"
                                                     />
                                                 </div>
                                             </div>
@@ -324,13 +323,13 @@
                                                     <button
                                                         key={status}
                                                         onClick={() => markAttendance(emp.id, status)}
-                                                        className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${
+                                                        className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${
                                                             emp.status === status
                                                                 ? status === 'present' 
-                                                                    ? 'bg-green-500 text-white shadow-sm' 
+                                                                    ? 'bg-green-500 text-white shadow-md' 
                                                                     : status === 'absent' 
-                                                                        ? 'bg-red-500 text-white shadow-sm' 
-                                                                        : 'bg-yellow-500 text-white shadow-sm'
+                                                                        ? 'bg-red-500 text-white shadow-md' 
+                                                                        : 'bg-yellow-500 text-white shadow-md'
                                                                 : 'text-gray-500 hover:bg-gray-200'
                                                         }`}
                                                     >
@@ -346,7 +345,7 @@
                                             <div className="bg-white inline-block p-4 rounded-full shadow-sm mb-3">
                                                 <Icons.Users />
                                             </div>
-                                            <p>No employees found.</p>
+                                            <p className="font-medium">No employees found.</p>
                                         </div>
                                     )}
                                 </div>
@@ -355,15 +354,15 @@
                             <div className="space-y-6">
                                 {/* Add Employee Form */}
                                 <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                                    <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Add New Employee</h2>
+                                    <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2 uppercase tracking-wide">Add New Employee</h2>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <input type="text" placeholder="ID (e.g. 001)" value={newEmployee.id} onChange={(e) => setNewEmployee({ ...newEmployee, id: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-brand-500 focus:border-brand-500 outline-none" />
-                                        <input type="text" placeholder="Full Name" value={newEmployee.name} onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-brand-500 focus:border-brand-500 outline-none" />
-                                        <input type="text" placeholder="Position" value={newEmployee.position} onChange={(e) => setNewEmployee({ ...newEmployee, position: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-brand-500 focus:border-brand-500 outline-none" />
-                                        <input type="tel" placeholder="Mobile" value={newEmployee.mobile} onChange={(e) => setNewEmployee({ ...newEmployee, mobile: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-brand-500 focus:border-brand-500 outline-none" />
-                                        <input type="text" placeholder="Shift (e.g. 9-6)" value={newEmployee.workTiming} onChange={(e) => setNewEmployee({ ...newEmployee, workTiming: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-brand-500 focus:border-brand-500 outline-none" />
+                                        <input type="text" placeholder="ID (e.g. 001)" value={newEmployee.id} onChange={(e) => setNewEmployee({ ...newEmployee, id: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium focus:ring-brand-500 focus:border-brand-500 outline-none" />
+                                        <input type="text" placeholder="Full Name" value={newEmployee.name} onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium focus:ring-brand-500 focus:border-brand-500 outline-none" />
+                                        <input type="text" placeholder="Position" value={newEmployee.position} onChange={(e) => setNewEmployee({ ...newEmployee, position: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium focus:ring-brand-500 focus:border-brand-500 outline-none" />
+                                        <input type="tel" placeholder="Mobile" value={newEmployee.mobile} onChange={(e) => setNewEmployee({ ...newEmployee, mobile: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium focus:ring-brand-500 focus:border-brand-500 outline-none" />
+                                        <input type="text" placeholder="Shift (e.g. 9-6)" value={newEmployee.workTiming} onChange={(e) => setNewEmployee({ ...newEmployee, workTiming: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium focus:ring-brand-500 focus:border-brand-500 outline-none" />
                                     </div>
-                                    <button onClick={addEmployee} className="mt-4 w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-brand-500/30 transition-all active:scale-[0.98]">
+                                    <button onClick={addEmployee} className="mt-4 w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand-500/30 transition-all active:scale-[0.98] uppercase tracking-wide">
                                         Save Employee
                                     </button>
                                 </div>
@@ -374,14 +373,14 @@
                                         <div key={emp.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">#{emp.id}</span>
+                                                    <span className="font-mono text-xs font-bold bg-gray-100 px-2 py-0.5 rounded text-gray-500">#{emp.id}</span>
                                                     {editingId === emp.id ? (
                                                         <input value={emp.name} onChange={(e) => updateEmployee(emp.id, 'name', e.target.value)} className="border rounded px-1 text-sm font-bold w-full" />
                                                     ) : (
                                                         <span className="font-bold text-gray-800">{emp.name}</span>
                                                     )}
                                                 </div>
-                                                <div className="text-xs text-gray-500">
+                                                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">
                                                     {emp.position} • {emp.mobile}
                                                 </div>
                                             </div>

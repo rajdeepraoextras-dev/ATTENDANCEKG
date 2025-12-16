@@ -1,301 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Khanago Attendance</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-        @font-face { font-family: 'Calibri'; src: local('Calibri'), local('Calibri-Regular'), local('Arial'); }
-        body { font-family: 'Calibri', sans-serif; background-color: #f3f4f6; -webkit-font-smoothing: antialiased; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
-    <script>
-        tailwind.config = { theme: { extend: { colors: { brand: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c', 700: '#c2410c' } } } } }
-    </script>
-</head>
-<body class="text-gray-800">
-    <div id="root"></div>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Khanago Attendance</title>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const Icons = {
-            Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>,
-            Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-            Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-            Download: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
-            Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
-            Edit: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
-            Save: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
-            Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        };
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpGLcnF_rVOYtKwlZFjjvT_v1jM8mP2_KqMttXracLlPO9qeFYfVKi6jlBoQ-KgmYy5Q/exec";
+  <!-- React -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-        const formatDate = (dateInput) => {
-            if (!dateInput) return new Date().toISOString().split('T')[0];
-            const d = new Date(dateInput);
-            if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
-            return d.toISOString().split('T')[0];
-        };
+  <style>
+    body {
+      font-family: Calibri, Arial, sans-serif;
+      background-color: #f3f4f6;
+    }
+  </style>
 
-        function App() {
-            const [activeTab, setActiveTab] = useState('attendance');
-            const [employees, setEmployees] = useState([]);
-            const [attendance, setAttendance] = useState([]);
-            const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
-            const [editingId, setEditingId] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const [submitting, setSubmitting] = useState(false);
-            
-            const [newEmployee, setNewEmployee] = useState({ id: '', name: '', position: '', mobile: '', workTiming: '' });
-
-            useEffect(() => { fetchData(); }, []);
-
-            const fetchData = async () => {
-                setLoading(true);
-                try {
-                    const response = await fetch(`${SCRIPT_URL}?action=getData`);
-                    const data = await response.json();
-                    
-                    if (data.employees) {
-                         const normalizedEmployees = data.employees.map(e => ({
-                            id: String(e.id || e.ID || e.employeeId || '').trim(),
-                            name: e.name || e.Name || e.employeeName || '',
-                            position: e.position || e.Position || '',
-                            mobile: e.mobile || e.Mobile || '',
-                            workTiming: e.workTiming || e.WorkTiming || ''
-                         })).filter(e => e.id);
-                         setEmployees(normalizedEmployees);
-                    }
-                    
-                    if (data.attendance) {
-                        const formattedAttendance = data.attendance.map(record => {
-                            let rawDate = record.date || record.Date;
-                            // Ensure date loaded from sheet matches the format used by the date picker
-                            return { 
-                                ...record, 
-                                employeeId: String(record.employeeId || record.id || record.ID || '').trim(), 
-                                date: formatDate(rawDate) 
-                            };
-                        });
-                        setAttendance(formattedAttendance);
-                    }
-                } catch (error) { console.error("Fetch Error:", error); alert("Network error: Could not load data."); }
-                setLoading(false);
-            };
-
-            const sendToSheet = async (action, payload) => {
-                try {
-                    await fetch(`${SCRIPT_URL}?action=${action}`, { method: "POST", body: JSON.stringify(payload) });
-                } catch (error) { console.error(error); }
-            };
-
-            const submitDailyAttendance = async () => {
-                const currentRecords = getAttendanceForDate();
-                if(currentRecords.length === 0) { alert("No data to save."); return; }
-                
-                setSubmitting(true);
-                // We send CLEAN data. The script will handle the 'Upsert' (Update/Insert) logic.
-                const formattedRecords = currentRecords.map(record => ({
-                    employeeId: String(record.id).trim(),
-                    employeeName: record.name,
-                    date: selectedDate,
-                    status: record.status,
-                    checkIn: record.checkIn,
-                    checkOut: record.checkOut
-                }));
-                
-                // Using Promise.all to save concurrently
-                const promises = formattedRecords.map(record => {
-                    return fetch(`${SCRIPT_URL}?action=saveAttendance`, { method: "POST", body: JSON.stringify(record) });
-                });
-
-                try {
-                    await Promise.all(promises);
-                    alert("✅ Attendance Saved Successfully! (No Duplicates)");
-                    fetchData(); // Refresh data to confirm save
-                } catch (error) {
-                    alert("❌ Error submitting. Please try again.");
-                }
-                setSubmitting(false);
-            };
-
-            const addEmployee = async () => {
-                if (newEmployee.id && newEmployee.name) {
-                    const empData = { ...newEmployee, id: String(newEmployee.id).trim() };
-                    setEmployees([...employees, empData]);
-                    setNewEmployee({ id: '', name: '', position: '', mobile: '', workTiming: '' });
-                    await sendToSheet('saveEmployee', empData);
-                } else { alert("ID and Name are required"); }
-            };
-
-            const deleteEmployee = async (id) => {
-                if (window.confirm("Delete employee?")) {
-                    setEmployees(employees.filter(emp => emp.id !== id));
-                    setAttendance(attendance.filter(att => att.employeeId !== id));
-                    await fetch(`${SCRIPT_URL}?action=deleteEmployee&id=${id}`);
-                }
-            };
-
-            const updateEmployee = (id, field, value) => {
-                setEmployees(employees.map(emp => emp.id === id ? { ...emp, [field]: value } : emp));
-            };
-
-            const updateAttendanceTimes = (employeeId, field, value) => {
-                setAttendance(prev => {
-                    const existing = prev.find(a => a.employeeId === employeeId && a.date === selectedDate);
-                    if (existing) {
-                        return prev.map(a => a.employeeId === employeeId && a.date === selectedDate ? { ...a, [field]: value } : a);
-                    } else {
-                        const employee = employees.find(e => e.id === employeeId);
-                        const newRecord = { employeeId, employeeName: employee.name, date: selectedDate, status: 'absent', checkIn: field === 'checkIn' ? value : '', checkOut: field === 'checkOut' ? value : '' };
-                        return [...prev, newRecord];
-                    }
-                });
-            };
-
-            const markAttendance = (employeeId, status) => {
-                setAttendance(prev => {
-                    const existing = prev.find(a => a.employeeId === employeeId && a.date === selectedDate);
-                    if (existing) {
-                        return prev.map(a => a.employeeId === employeeId && a.date === selectedDate ? { ...a, status } : a);
-                    } else {
-                        const employee = employees.find(e => e.id === employeeId);
-                        const newRecord = { employeeId, employeeName: employee.name, date: selectedDate, status, checkIn: '', checkOut: '' };
-                        return [...prev, newRecord];
-                    }
-                });
-            };
-
-            const getAttendanceForDate = () => {
-                return employees.map(emp => {
-                    const att = attendance.find(a => String(a.employeeId).trim() === String(emp.id).trim() && a.date === selectedDate);
-                    return { ...emp, status: att?.status || 'absent', checkIn: att?.checkIn || '', checkOut: att?.checkOut || '' };
-                });
-            };
-
-            const stats = (() => {
-                const currentView = getAttendanceForDate();
-                return {
-                    present: currentView.filter(a => a.status === 'present').length,
-                    absent: currentView.filter(a => a.status === 'absent').length,
-                    leave: currentView.filter(a => a.status === 'leave').length
-                };
-            })();
-
-            const exportCSV = () => {
-                const data = getAttendanceForDate();
-                let csv = "ID,Name,Position,Mobile,Date,In,Out,Status\n";
-                data.forEach(e => csv += `${e.id},${e.name},${e.position},${e.mobile},${selectedDate},${e.checkIn},${e.checkOut},${e.status}\n`);
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-                link.download = `Khanago_${selectedDate}.csv`;
-                link.click();
-            };
-
-            return (
-                <div className="min-h-screen pb-32">
-                    <div className="bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg pb-12 pt-8 px-4 sm:px-8 rounded-b-[2rem]">
-                        <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
-                            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-widest uppercase mb-1 drop-shadow-sm">KHANAGO</h1>
-                            <p className="text-brand-100 font-medium tracking-wide text-sm sm:text-base opacity-90 uppercase">Attendance System</p>
-                            {loading && <div className="mt-3 bg-white/20 px-4 py-1 rounded-full text-xs font-semibold animate-pulse tracking-wide flex items-center gap-2">LOADING DATA...</div>}
-                        </div>
-                        <div className="max-w-4xl mx-auto mt-8">
-                            <div className="bg-black/20 p-1.5 rounded-2xl flex gap-1 backdrop-blur-sm max-w-md mx-auto">
-                                <button onClick={() => setActiveTab('attendance')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'attendance' ? 'bg-white text-brand-700 shadow-lg transform scale-[1.02]' : 'text-white/80 hover:bg-white/10'}`}><Icons.Clock /> ATTENDANCE</button>
-                                <button onClick={() => setActiveTab('employees')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'employees' ? 'bg-white text-brand-700 shadow-lg transform scale-[1.02]' : 'text-white/80 hover:bg-white/10'}`}><Icons.Users /> EMPLOYEES</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="max-w-4xl mx-auto px-4 -mt-6">
-                        {loading && activeTab === 'attendance' ? (
-                             <div className="text-center py-20 bg-white rounded-2xl shadow-lg border border-gray-100">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto mb-4"></div>
-                                <p className="text-gray-500 font-bold">Connecting to Google Sheets...</p>
-                             </div>
-                        ) : activeTab === 'attendance' ? (
-                            <div className="space-y-6">
-                                <div className="bg-white rounded-2xl shadow-lg p-5 border border-gray-100">
-                                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-4">
-                                        <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block w-full sm:w-auto p-2.5 font-bold uppercase" />
-                                        <button onClick={exportCSV} className="text-brand-600 text-sm font-bold uppercase tracking-wide flex items-center gap-1 hover:bg-brand-50 px-4 py-2 rounded-lg transition-colors"><Icons.Download /> Export CSV</button>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <div className="text-center p-3 bg-green-50 rounded-xl border border-green-100"><div className="text-2xl font-bold text-green-600">{stats.present}</div><div className="text-xs text-green-700 font-bold uppercase tracking-wider">Present</div></div>
-                                        <div className="text-center p-3 bg-red-50 rounded-xl border border-red-100"><div className="text-2xl font-bold text-red-600">{stats.absent}</div><div className="text-xs text-red-700 font-bold uppercase tracking-wider">Absent</div></div>
-                                        <div className="text-center p-3 bg-yellow-50 rounded-xl border border-yellow-100"><div className="text-2xl font-bold text-yellow-600">{stats.leave}</div><div className="text-xs text-yellow-700 font-bold uppercase tracking-wider">Leave</div></div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {getAttendanceForDate().map(emp => (
-                                        <div key={emp.id} className="mobile-card sm:bg-white sm:rounded-xl sm:shadow-sm sm:border sm:border-gray-200 sm:p-4 hover:shadow-md transition-shadow">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div><h3 className="text-lg font-bold text-gray-900">{emp.name}</h3><p className="text-sm text-gray-500 font-medium uppercase tracking-wide">{emp.position}</p></div>
-                                                <div className="text-xs font-bold font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">#{emp.id}</div>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                                <div><label className="text-xs font-bold text-gray-400 mb-1 block uppercase">Check In</label><input type="time" value={emp.checkIn} onChange={(e) => updateAttendanceTimes(emp.id, 'checkIn', e.target.value)} className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm font-semibold rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500 block p-2" /></div>
-                                                <div><label className="text-xs font-bold text-gray-400 mb-1 block uppercase">Check Out</label><input type="time" value={emp.checkOut} onChange={(e) => updateAttendanceTimes(emp.id, 'checkOut', e.target.value)} className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm font-semibold rounded-lg focus:border-brand-500 focus:ring-1 focus:ring-brand-500 block p-2" /></div>
-                                            </div>
-                                            <div className="flex bg-gray-100 p-1 rounded-lg">
-                                                {['present', 'absent', 'leave'].map(status => (
-                                                    <button key={status} onClick={() => markAttendance(emp.id, status)} className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${emp.status === status ? status === 'present' ? 'bg-green-500 text-white shadow-md' : status === 'absent' ? 'bg-red-500 text-white shadow-md' : 'bg-yellow-500 text-white shadow-md' : 'text-gray-500 hover:bg-gray-200'}`}>{status}</button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {getAttendanceForDate().length === 0 && <div className="text-center py-12 text-gray-400"><div className="bg-white inline-block p-4 rounded-full shadow-sm mb-3"><Icons.Users /></div><p className="font-medium">No employees found.</p></div>}
-                                </div>
-                                <div className="fixed bottom-6 left-0 right-0 px-4 flex justify-center z-50">
-                                    <button onClick={submitDailyAttendance} disabled={submitting} className="bg-green-600 hover:bg-green-700 text-white font-extrabold text-lg py-4 px-12 rounded-full shadow-2xl flex items-center gap-2 transform active:scale-95 transition-all disabled:opacity-70 disabled:transform-none">
-                                        {submitting ? (<span>SAVING...</span>) : (<><Icons.Check /> SUBMIT ATTENDANCE</>)}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="space-y-6">
-                                <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                                    <h2 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2 uppercase tracking-wide">Add New Employee</h2>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <input type="text" placeholder="ID (e.g. 001)" value={newEmployee.id} onChange={(e) => setNewEmployee({ ...newEmployee, id: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium focus:ring-brand-500 focus:border-brand-500 outline-none" />
-                                        <input type="text" placeholder="Full Name" value={newEmployee.name} onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium focus:ring-brand-500 focus:border-brand-500 outline-none" />
-                                        <input type="text" placeholder="Position" value={newEmployee.position} onChange={(e) => setNewEmployee({ ...newEmployee, position: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium focus:ring-brand-500 focus:border-brand-500 outline-none" />
-                                        <input type="tel" placeholder="Mobile" value={newEmployee.mobile} onChange={(e) => setNewEmployee({ ...newEmployee, mobile: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium focus:ring-brand-500 focus:border-brand-500 outline-none" />
-                                        <input type="text" placeholder="Shift (e.g. 9-6)" value={newEmployee.workTiming} onChange={(e) => setNewEmployee({ ...newEmployee, workTiming: e.target.value })} className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-medium focus:ring-brand-500 focus:border-brand-500 outline-none" />
-                                    </div>
-                                    <button onClick={addEmployee} className="mt-4 w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand-500/30 transition-all active:scale-[0.98] uppercase tracking-wide">Save Employee</button>
-                                </div>
-                                <div className="space-y-3">
-                                    {employees.map(emp => (
-                                        <div key={emp.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1"><span className="font-mono text-xs font-bold bg-gray-100 px-2 py-0.5 rounded text-gray-500">#{emp.id}</span>{editingId === emp.id ? (<input value={emp.name} onChange={(e) => updateEmployee(emp.id, 'name', e.target.value)} className="border rounded px-1 text-sm font-bold w-full" />) : (<span className="font-bold text-gray-800">{emp.name}</span>)}</div>
-                                                <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">{emp.position} • {emp.mobile}</div>
-                                            </div>
-                                            <div className="flex items-center gap-2 ml-4">
-                                                <button onClick={() => setEditingId(editingId === emp.id ? null : emp.id)} className={`p-2 rounded-lg bg-gray-50 ${editingId === emp.id ? 'text-green-600' : 'text-gray-400 hover:text-brand-500'}`}>{editingId === emp.id ? <Icons.Save /> : <Icons.Edit />}</button>
-                                                <button onClick={() => deleteEmployee(emp.id)} className="p-2 rounded-lg bg-red-50 text-red-400 hover:text-red-600 hover:bg-red-100"><Icons.Trash /></button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              600: "#ea580c",
+              700: "#c2410c"
+            }
+          }
         }
+      }
+    }
+  </script>
+</head>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+<body class="text-gray-800">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+/* 🔗 YOUR GOOGLE SCRIPT URL */
+const SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbxpGLcnF_rVOYtKwlZFjjvT_v1jM8mP2_KqMttXracLlPO9qeFYfVKi6jlBoQ-KgmYy5Q/exec";
+
+/* 📅 DATE FORMATTER */
+const formatDate = (d) => {
+  const date = new Date(d);
+  if (isNaN(date)) return "";
+  return date.toISOString().split("T")[0];
+};
+
+function App() {
+  const [employees, setEmployees] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  /* 🔄 LOAD DATA */
+  useEffect(() => {
+    fetch(`${SCRIPT_URL}?action=getData`)
+      .then(r => r.json())
+      .then(data => {
+        setEmployees(data.employees || []);
+        setAttendance(
+          (data.attendance || []).map(a => ({
+            ...a,
+            employeeId: String(a.employeeId).trim(),
+            date: formatDate(a.date)
+          }))
+        );
+        setLoading(false);
+      });
+  }, []);
+
+  /* 📌 GET ATTENDANCE FOR SELECTED DATE */
+  const dailyData = employees.map(emp => {
+    const record = attendance.find(
+      a =>
+        String(a.employeeId).trim() === String(emp.id).trim() &&
+        formatDate(a.date) === selectedDate
+    );
+
+    return {
+      ...emp,
+      status: record?.status || "absent",
+      checkIn: record?.checkIn || "",
+      checkOut: record?.checkOut || ""
+    };
+  });
+
+  /* 🟢 MARK STATUS */
+  const markStatus = (id, status) => {
+    setAttendance(prev => {
+      const existing = prev.find(a => a.employeeId === id && a.date === selectedDate);
+      if (existing) {
+        return prev.map(a =>
+          a.employeeId === id && a.date === selectedDate ? { ...a, status } : a
+        );
+      }
+      const emp = employees.find(e => e.id === id);
+      return [...prev, {
+        employeeId: id,
+        employeeName: emp.name,
+        date: selectedDate,
+        status,
+        checkIn: "",
+        checkOut: ""
+      }];
+    });
+  };
+
+  /* ⏱️ UPDATE TIME */
+  const updateTime = (id, field, value) => {
+    setAttendance(prev => {
+      const existing = prev.find(a => a.employeeId === id && a.date === selectedDate);
+      if (existing) {
+        return prev.map(a =>
+          a.employeeId === id && a.date === selectedDate
+            ? { ...a, [field]: value, status: value ? "present" : a.status }
+            : a
+        );
+      }
+      const emp = employees.find(e => e.id === id);
+      return [...prev, {
+        employeeId: id,
+        employeeName: emp.name,
+        date: selectedDate,
+        status: "present",
+        checkIn: field === "checkIn" ? value : "",
+        checkOut: field === "checkOut" ? value : ""
+      }];
+    });
+  };
+
+  /* 💾 SAVE ATTENDANCE */
+  const saveAttendance = async () => {
+    setSaving(true);
+    for (const emp of dailyData) {
+      await fetch(`${SCRIPT_URL}?action=saveAttendance`, {
+        method: "POST",
+        body: JSON.stringify({
+          employeeId: emp.id,
+          employeeName: emp.name,
+          date: selectedDate,
+          status: emp.status,
+          checkIn: emp.checkIn,
+          checkOut: emp.checkOut
+        })
+      });
+    }
+    alert("✅ Attendance saved successfully");
+    setSaving(false);
+  };
+
+  if (loading) {
+    return <div className="text-center mt-20 font-bold">Loading...</div>;
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-4 pb-28">
+      <div className="bg-gradient-to-r from-brand-600 to-brand-700 text-white p-6 rounded-2xl shadow-lg text-center">
+        <h1 className="text-3xl font-extrabold uppercase">KHANAGO</h1>
+        <p className="text-sm tracking-widest">Attendance System</p>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={e => setSelectedDate(e.target.value)}
+          className="mt-4 text-black p-2 rounded"
+        />
+      </div>
+
+      <div className="mt-6 space-y-4">
+        {dailyData.map(emp => (
+          <div key={emp.id} className="bg-white rounded-xl p-4 shadow">
+            <div className="flex justify-between">
+              <div>
+                <div className="font-bold">{emp.name}</div>
+                <div className="text-xs text-gray-500">{emp.position}</div>
+              </div>
+              <div className="text-xs font-mono">#{emp.id}</div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <input
+                type="time"
+                value={emp.checkIn}
+                onChange={e => updateTime(emp.id, "checkIn", e.target.value)}
+                className="border p-2 rounded"
+              />
+              <input
+                type="time"
+                value={emp.checkOut}
+                onChange={e => updateTime(emp.id, "checkOut", e.target.value)}
+                className="border p-2 rounded"
+              />
+            </div>
+
+            <div className="flex gap-2 mt-3">
+              {["present", "absent", "leave"].map(s => (
+                <button
+                  key={s}
+                  onClick={() => markStatus(emp.id, s)}
+                  className={`flex-1 py-2 rounded font-bold uppercase text-xs ${
+                    emp.status === s
+                      ? s === "present"
+                        ? "bg-green-600 text-white"
+                        : s === "absent"
+                        ? "bg-red-600 text-white"
+                        : "bg-yellow-500 text-white"
+                      : "bg-gray-200"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="fixed bottom-6 left-0 right-0 flex justify-center">
+        <button
+          onClick={saveAttendance}
+          disabled={saving}
+          className="bg-green-600 text-white font-extrabold px-10 py-4 rounded-full shadow-xl"
+        >
+          {saving ? "Saving..." : "SUBMIT ATTENDANCE"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
 </body>
 </html>
+

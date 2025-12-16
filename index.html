@@ -127,16 +127,29 @@
                 } catch (error) { console.error(error); }
             };
 
-            // --- MAIN SUBMIT FUNCTION ---
+            // --- MAIN SUBMIT FUNCTION (FIXED) ---
             const submitDailyAttendance = async () => {
-                if(getAttendanceForDate().length === 0) return;
+                const currentRecords = getAttendanceForDate();
+                
+                if(currentRecords.length === 0) {
+                    alert("No data to save.");
+                    return;
+                }
                 
                 setSubmitting(true);
-                const recordsToSave = getAttendanceForDate(); // Gets combined employee + attendance data
+
+                // FIX: Map the data to match Google Sheet Headers exactly
+                // Sheet expects: employeeId, employeeName, date, status, checkIn, checkOut
+                const formattedRecords = currentRecords.map(record => ({
+                    employeeId: record.id,           // Maps 'id' to 'employeeId'
+                    employeeName: record.name,       // Maps 'name' to 'employeeName'
+                    date: selectedDate,              // Ensures 'date' is always sent
+                    status: record.status,
+                    checkIn: record.checkIn,
+                    checkOut: record.checkOut
+                }));
                 
-                // We create an array of fetch promises to save sequentially or parallel
-                // Google Apps Script can be finicky with parallel, but let's try Promise.all
-                const promises = recordsToSave.map(record => {
+                const promises = formattedRecords.map(record => {
                     return fetch(`${SCRIPT_URL}?action=saveAttendance`, {
                         method: "POST",
                         body: JSON.stringify(record)
@@ -216,10 +229,6 @@
             };
 
             const stats = (() => {
-                const dateAttendance = attendance.filter(a => a.date === selectedDate);
-                // Note: This stats count relies on the attendance array being populated.
-                // New records in 'getAttendanceForDate' might not be in 'attendance' state yet until interacted with.
-                // For a cleaner UI, we map over the result of getAttendanceForDate()
                 const currentView = getAttendanceForDate();
                 const present = currentView.filter(a => a.status === 'present').length;
                 const leave = currentView.filter(a => a.status === 'leave').length;

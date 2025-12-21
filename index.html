@@ -16,6 +16,7 @@
             --TEXT-DIM: #666666;
             --DANGER: #D32F2F;
             --SUCCESS: #2E7D32;
+            --INFO: #2196F3;
             --ORANGE-TINT: rgba(255, 107, 0, 0.05);
         }
 
@@ -46,17 +47,28 @@
         h2 { font-size: 1rem; margin-bottom: 25px; letter-spacing: 2px; color: var(--TEXT-DIM); font-weight: 800; }
 
         /* FORM */
-        .FORM-ROW { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .FORM-PANEL { background: #FAFAFA; border: 1px solid var(--BORDER); padding: 30px; border-radius: 8px; margin-bottom: 40px; }
+        .FORM-ROW { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .INPUT-GROUP { position: relative; }
         label { display: block; margin-bottom: 8px; font-size: 0.75rem; color: var(--TEXT-MAIN); font-weight: 700; }
-        input, select { width: 100%; padding: 12px; border: 1px solid var(--BORDER); border-radius: 4px; font-weight: 600; }
-        input:focus { outline: none; border-color: var(--PRIMARY); background: var(--ORANGE-TINT); }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--BORDER); border-radius: 4px; font-weight: 600; background: #FFF; }
+        input:focus, select:focus { outline: none; border-color: var(--PRIMARY); background: var(--ORANGE-TINT); }
+        input:disabled, select:disabled { background: #E0E0E0; color: #888; cursor: not-allowed; }
+
+        .TIME-BTN { position: absolute; right: 5px; top: 28px; background: var(--TEXT-MAIN); color: white; border: none; font-size: 0.6rem; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
+
+        /* ACTION BAR */
+        .ACTION-BAR { display: flex; gap: 15px; margin-top: 20px; align-items: center; }
+        .CURRENT-STATUS-DISPLAY { font-size: 0.8rem; font-weight: 800; color: var(--TEXT-DIM); margin-left: auto; }
+        .STATUS-INDICATOR { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; background: #CCC; }
 
         /* BUTTONS */
-        .BTN { background: var(--PRIMARY); color: #FFF; border: none; padding: 15px 35px; font-weight: 900; cursor: pointer; border-radius: 4px; transition: 0.2s; }
+        .BTN { background: var(--PRIMARY); color: #FFF; border: none; padding: 15px 35px; font-weight: 900; cursor: pointer; border-radius: 4px; transition: 0.2s; min-width: 150px; }
         .BTN:hover { background: var(--PRIMARY-DARK); box-shadow: 0 4px 12px rgba(255,107,0,0.2); }
         .BTN-SECONDARY { background: #EEE; color: var(--TEXT-MAIN); }
         .BTN-DANGER { background: #FFF; border: 1px solid var(--DANGER); color: var(--DANGER); }
-
+        .BTN-OUT { background: var(--TEXT-MAIN); } /* Dark button for punch out */
+        
         /* TABLE */
         .TABLE-WRAPPER { overflow-x: auto; margin-top: 30px; }
         table { width: 100%; border-collapse: collapse; }
@@ -67,8 +79,10 @@
         .STATUS-BADGE { padding: 4px 10px; font-size: 0.7rem; font-weight: 900; border-radius: 2px; }
         .STATUS-PRESENT { background: #E8F5E9; color: var(--SUCCESS); }
         .STATUS-ABSENT { background: #FFEBEE; color: var(--DANGER); }
+        .STATUS-HALF-DAY { background: #FFF3E0; color: var(--PRIMARY); }
+        .STATUS-ON-LEAVE { background: #E3F2FD; color: var(--INFO); }
 
-        .NOTIFICATION { position: fixed; bottom: 30px; right: 30px; background: var(--TEXT-MAIN); color: #FFF; padding: 15px 30px; font-weight: 700; border-radius: 4px; display: none; z-index: 1000; }
+        .NOTIFICATION { position: fixed; bottom: 30px; right: 30px; background: var(--TEXT-MAIN); color: #FFF; padding: 15px 30px; font-weight: 700; border-radius: 4px; display: none; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
         @keyframes FADEIN { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
@@ -92,48 +106,81 @@
                 
                 <div class="STATS-GRID">
                     <div class="STAT-CARD">
-                        <div class="STAT-LABEL">TOTAL STAFF LOGGED</div>
+                        <div class="STAT-LABEL">TOTAL LOGGED TODAY</div>
                         <div class="STAT-VALUE" id="STAT-TOTAL">0</div>
                     </div>
                     <div class="STAT-CARD" style="border-bottom: 3px solid var(--SUCCESS);">
-                        <div class="STAT-LABEL">TOTAL PRESENT</div>
+                        <div class="STAT-LABEL">PRESENT</div>
                         <div class="STAT-VALUE ORANGE" id="STAT-PRESENT">0</div>
                     </div>
                     <div class="STAT-CARD" style="border-bottom: 3px solid var(--DANGER);">
-                        <div class="STAT-LABEL">TOTAL ABSENT</div>
+                        <div class="STAT-LABEL">ABSENT</div>
                         <div class="STAT-VALUE" id="STAT-ABSENT">0</div>
                     </div>
                     <div class="STAT-CARD">
-                        <div class="STAT-LABEL">LEAVE / HALF DAY</div>
+                        <div class="STAT-LABEL">ON LEAVE / HALF DAY</div>
                         <div class="STAT-VALUE" id="STAT-OTHER">0</div>
                     </div>
                 </div>
 
-                <h2>MARK ATTENDANCE</h2>
-                <form id="ATTENDANCEFORM">
-                    <div class="FORM-ROW">
-                        <div>
-                            <label>OPERATIVE</label>
-                            <select id="EMPLOYEESELECT" required><option value="">SYNCHRONIZING...</option></select>
+                <h2>SMART ATTENDANCE LOG</h2>
+                
+                <div class="FORM-PANEL">
+                    <form id="ATTENDANCEFORM">
+                        <div class="FORM-ROW">
+                            <div>
+                                <label>SELECT OPERATIVE</label>
+                                <select id="EMPLOYEESELECT" required onchange="DETECT_STATE()">
+                                    <option value="">LOADING STAFF...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>DATE OF ENTRY</label>
+                                <input type="date" id="ATTDATE" required onchange="DETECT_STATE()">
+                            </div>
+                            <div>
+                                <label>CURRENT STATUS</label>
+                                <select id="STATUS" required onchange="HANDLE_STATUS_MANUAL()">
+                                    <option value="PRESENT">PRESENT</option>
+                                    <option value="ABSENT">ABSENT</option>
+                                    <option value="HALF-DAY">HALF DAY</option>
+                                    <option value="ON-LEAVE">ON LEAVE</option>
+                                </select>
+                            </div>
                         </div>
-                        <div>
-                            <label>STATUS</label>
-                            <select id="STATUS" required onchange="HANDLESTATUSCHANGE()">
-                                <option value="PRESENT">PRESENT</option>
-                                <option value="ABSENT">ABSENT</option>
-                                <option value="HALF-DAY">HALF DAY</option>
-                                <option value="ON-LEAVE">ON LEAVE</option>
-                            </select>
-                        </div>
-                        <div><label>TIME IN</label><input type="time" id="LOGINTIME"></div>
-                        <div><label>TIME OUT</label><input type="time" id="LOGOUTTIME"></div>
-                        <div><label>DATE</label><input type="date" id="ATTDATE" required></div>
-                    </div>
-                    <button type="submit" class="BTN">AUTHORIZE LOG</button>
-                </form>
 
-                <div class="FORM-ROW" style="margin-top: 60px;">
-                    <div><label>VIEW HISTORY BY DATE</label><input type="date" id="DATEFILTER"></div>
+                        <div class="FORM-ROW">
+                            <div class="INPUT-GROUP">
+                                <label>PUNCH IN TIME</label>
+                                <input type="time" id="LOGINTIME">
+                                <button type="button" class="TIME-BTN" onclick="SET_TIME('LOGINTIME')">NOW</button>
+                            </div>
+                            <div class="INPUT-GROUP">
+                                <label>PUNCH OUT TIME</label>
+                                <input type="time" id="LOGOUTTIME">
+                                <button type="button" class="TIME-BTN" onclick="SET_TIME('LOGOUTTIME')">NOW</button>
+                            </div>
+                        </div>
+
+                        <div class="ACTION-BAR">
+                            <button type="submit" id="MAIN_ACTION_BTN" class="BTN">PUNCH IN</button>
+                            
+                            <div class="CURRENT-STATUS-DISPLAY">
+                                <span class="STATUS-INDICATOR" id="STATUS_DOT"></span>
+                                <span id="STATUS_TEXT">SELECT A STAFF MEMBER</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="FORM-ROW" style="align-items: flex-end;">
+                    <div style="flex-grow: 0;">
+                        <label>VIEW HISTORY FOR DATE:</label>
+                        <input type="date" id="DATEFILTER">
+                    </div>
+                    <div style="flex-grow: 1; text-align: right;">
+                        <button onclick="FETCHDATA()" class="BTN BTN-SECONDARY" style="padding: 10px 20px; font-size: 0.7rem;">REFRESH DATA</button>
+                    </div>
                 </div>
 
                 <div class="TABLE-WRAPPER">
@@ -181,15 +228,18 @@
     </div>
 
     <script>
+        // --- CONFIGURATION ---
         const SUPABASE_URL = 'https://tyhrahuionsvzyuzdtkr.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5aHJhaHVpb25zdnp5dXpkdGtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzA4MTcsImV4cCI6MjA4MTY0NjgxN30.ypEmevr3XTuyNtJxUSSqCplAdcru9fkE3q15HOQHrVY';
         const _SUPABASE = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let EMPLOYEES = [];
         let ATTENDANCE = [];
+        let CURRENT_RECORD_ID = null; // Tracks if we are updating a row or creating a new one
         let EDITMODE = false;
         let EDITID = null;
 
+        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', async () => {
             INITDATES();
             SETUPTABS();
@@ -203,11 +253,16 @@
         }
 
         async function FETCHDATA() {
+            // Fetch Employees
             const { data: EDATA } = await _SUPABASE.from('employees').select('*').order('name');
             EMPLOYEES = EDATA || [];
-            const { data: ADATA } = await _SUPABASE.from('attendance').select('*').order('date', { ascending: false });
+            
+            // Fetch Attendance
+            const { data: ADATA } = await _SUPABASE.from('attendance').select('*').order('created_at', { ascending: false });
             ATTENDANCE = ADATA || [];
+            
             RENDERALL();
+            DETECT_STATE(); // Update form state after fetch
         }
 
         function SETUPTABS() {
@@ -220,7 +275,200 @@
             });
         }
 
-        // EMPLOYEE ACTIONS
+        // --- INTELLIGENT FORM LOGIC ---
+
+        function DETECT_STATE() {
+            // This function decides if we are Punching In or Punching Out
+            const empId = document.getElementById('EMPLOYEESELECT').value;
+            const date = document.getElementById('ATTDATE').value;
+            const btn = document.getElementById('MAIN_ACTION_BTN');
+            const statusText = document.getElementById('STATUS_TEXT');
+            const statusDot = document.getElementById('STATUS_DOT');
+
+            // Reset inputs first
+            if(!CURRENT_RECORD_ID) {
+                document.getElementById('LOGINTIME').value = '';
+                document.getElementById('LOGOUTTIME').value = '';
+            }
+
+            if (!empId) {
+                statusText.innerText = "SELECT A STAFF MEMBER";
+                statusDot.style.background = "#CCC";
+                return;
+            }
+
+            // Find if a record exists for this person on this date
+            const existing = ATTENDANCE.find(a => a.emp_id === empId && a.date === date);
+
+            if (existing) {
+                // RECORD FOUND
+                CURRENT_RECORD_ID = existing.id; // Store Supabase Row ID for Update
+                
+                document.getElementById('STATUS').value = existing.status;
+                document.getElementById('LOGINTIME').value = existing.login;
+                document.getElementById('LOGOUTTIME').value = existing.logout;
+
+                if(existing.status === 'ABSENT' || existing.status === 'ON-LEAVE') {
+                    // THEY ARE ABSENT
+                    statusText.innerText = `MARKED AS ${existing.status}`;
+                    statusDot.style.background = "var(--DANGER)";
+                    btn.innerText = "UPDATE RECORD";
+                    btn.className = "BTN BTN-SECONDARY";
+                } else if (existing.login && (!existing.logout || existing.logout === '--')) {
+                    // PUNCHED IN, BUT NOT OUT
+                    statusText.innerText = "CURRENTLY WORKING (PUNCHED IN)";
+                    statusDot.style.background = "var(--SUCCESS)";
+                    document.getElementById('LOGINTIME').disabled = true; // Lock start time
+                    document.getElementById('LOGOUTTIME').disabled = false;
+                    btn.innerText = "PUNCH OUT";
+                    btn.className = "BTN BTN-OUT"; // Dark button
+                } else {
+                    // PUNCHED IN AND OUT
+                    statusText.innerText = "SHIFT COMPLETED";
+                    statusDot.style.background = "var(--PRIMARY)";
+                    btn.innerText = "UPDATE RECORD";
+                    btn.className = "BTN BTN-SECONDARY";
+                }
+
+            } else {
+                // NO RECORD FOUND - NEW ENTRY
+                CURRENT_RECORD_ID = null;
+                statusText.innerText = "NOT LOGGED IN YET";
+                statusDot.style.background = "#CCC";
+                
+                // Defaults for new entry
+                document.getElementById('STATUS').value = 'PRESENT';
+                document.getElementById('LOGINTIME').disabled = false;
+                document.getElementById('LOGOUTTIME').disabled = true;
+                document.getElementById('LOGINTIME').value = '';
+                document.getElementById('LOGOUTTIME').value = '';
+                
+                btn.innerText = "PUNCH IN";
+                btn.className = "BTN"; // Orange button
+            }
+        }
+
+        function SET_TIME(fieldId) {
+            const now = new Date();
+            const timeString = now.toTimeString().split(' ')[0].substring(0,5);
+            document.getElementById(fieldId).value = timeString;
+        }
+
+        function HANDLE_STATUS_MANUAL() {
+            const s = document.getElementById('STATUS').value;
+            if(s === 'ABSENT' || s === 'ON-LEAVE') {
+                document.getElementById('LOGINTIME').value = '--';
+                document.getElementById('LOGOUTTIME').value = '--';
+                document.getElementById('LOGINTIME').disabled = true;
+                document.getElementById('LOGOUTTIME').disabled = true;
+            } else {
+                document.getElementById('LOGINTIME').disabled = false;
+                // If checking out, keep login disabled
+                if(CURRENT_RECORD_ID && document.getElementById('LOGOUTTIME').value === '') {
+                    document.getElementById('LOGINTIME').disabled = true;
+                }
+            }
+        }
+
+        // --- SUBMIT ATTENDANCE ---
+        document.getElementById('ATTENDANCEFORM').addEventListener('submit', async (E) => {
+            E.preventDefault();
+            
+            const empId = document.getElementById('EMPLOYEESELECT').value;
+            if(!empId) return alert("SELECT EMPLOYEE FIRST");
+
+            const empObj = EMPLOYEES.find(e => e.id === empId);
+            const date = document.getElementById('ATTDATE').value;
+            const status = document.getElementById('STATUS').value;
+            
+            // Logic to handle empty times
+            let inTime = document.getElementById('LOGINTIME').value;
+            let outTime = document.getElementById('LOGOUTTIME').value;
+
+            if(status === 'PRESENT' || status === 'HALF-DAY') {
+                if(!inTime) inTime = new Date().toTimeString().substring(0,5); // Auto fill if empty on punch in
+                if(!outTime && CURRENT_RECORD_ID) {
+                    // Only auto-fill out time if we are Punching Out (record exists)
+                     // Keep empty if just punching in
+                }
+            }
+
+            const payload = {
+                emp_id: empId,
+                name: empObj.name,
+                status: status,
+                login: inTime || '--',
+                logout: outTime || '--',
+                date: date
+            };
+
+            if (CURRENT_RECORD_ID) {
+                // UPDATE EXISTING ROW (Check Out)
+                const { error } = await _SUPABASE.from('attendance').update(payload).eq('id', CURRENT_RECORD_ID);
+                if(error) { alert("ERROR UPDATING"); console.error(error); return; }
+                NOTIFY(`UPDATED: ${empObj.name}`);
+            } else {
+                // INSERT NEW ROW (Check In)
+                const { error } = await _SUPABASE.from('attendance').insert([payload]);
+                if(error) { alert("ERROR SAVING"); console.error(error); return; }
+                NOTIFY(`PUNCHED IN: ${empObj.name}`);
+            }
+
+            await FETCHDATA(); // Reload data
+        });
+
+        // --- RENDER FUNCTIONS ---
+
+        function RENDERALL() {
+            // Render Select Dropdown
+            const sel = document.getElementById('EMPLOYEESELECT');
+            const currentVal = sel.value;
+            sel.innerHTML = '<option value="">CHOOSE STAFF MEMBER</option>' + 
+                EMPLOYEES.map(E => `<option value="${E.id}">${E.name}</option>`).join('');
+            sel.value = currentVal; // Restore selection if any
+
+            RENDEREMPLOYEES();
+            RENDERATTENDANCE();
+        }
+
+        function RENDERATTENDANCE() {
+            const F = document.getElementById('DATEFILTER').value;
+            // Filter locally
+            const FILT = ATTENDANCE.filter(A => !F || A.date === F);
+            
+            // STATS
+            const TOTAL = FILT.length;
+            const PRESENT = FILT.filter(A => A.status === 'PRESENT').length;
+            const ABSENT = FILT.filter(A => A.status === 'ABSENT').length;
+            const OTHER = TOTAL - PRESENT - ABSENT;
+
+            document.getElementById('STAT-TOTAL').innerText = TOTAL;
+            document.getElementById('STAT-PRESENT').innerText = PRESENT;
+            document.getElementById('STAT-ABSENT').innerText = ABSENT;
+            document.getElementById('STAT-OTHER').innerText = OTHER;
+
+            // TABLE
+            document.getElementById('ATTENDANCETABLEBODY').innerHTML = FILT.map(A => `
+                <tr>
+                    <td>${A.emp_id}</td>
+                    <td>${A.name}</td>
+                    <td><span class="STATUS-BADGE STATUS-${A.status}">${A.status}</span></td>
+                    <td>${A.login}</td>
+                    <td>${A.logout}</td>
+                    <td>${A.date}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="6" style="text-align:center; padding: 40px; color:#AAA">NO RECORDS FOUND FOR THIS DATE</td></tr>';
+        }
+
+        function RENDEREMPLOYEES() {
+            document.getElementById('EMPLOYEETABLEBODY').innerHTML = EMPLOYEES.map(E => `
+                <tr><td>${E.id}</td><td>${E.name}</td><td>${E.position}</td><td>${E.phone}</td>
+                <td><button onclick="EDITEMPLOYEE('${E.id}')" class="BTN BTN-SECONDARY" style="padding: 5px 12px; font-size: 0.65rem;">EDIT</button>
+                <button onclick="DELETEEMPLOYEE('${E.id}')" class="BTN BTN-DANGER" style="padding: 5px 12px; font-size: 0.65rem;">DEL</button></td></tr>
+            `).join('');
+        }
+
+        // --- EMPLOYEE MANAGEMENT (UNCHANGED LOGIC) ---
         document.getElementById('EMPLOYEEFORM').addEventListener('submit', async (E) => {
             E.preventDefault();
             const DATA = {
@@ -266,67 +514,6 @@
             document.getElementById('EMPID').disabled = false;
             document.getElementById('CANCELEDIT').style.display = "NONE";
             document.getElementById('EMPFORMTITLE').innerText = "ONBOARD STAFF";
-        }
-
-        // ATTENDANCE ACTIONS
-        document.getElementById('ATTENDANCEFORM').addEventListener('submit', async (E) => {
-            E.preventDefault();
-            const EMPID = document.getElementById('EMPLOYEESELECT').value;
-            const EMP = EMPLOYEES.find(E => E.id === EMPID);
-            const RECORD = {
-                emp_id: EMP.id, name: EMP.name, status: document.getElementById('STATUS').value.toUpperCase(),
-                login: document.getElementById('LOGINTIME').value || '--',
-                logout: document.getElementById('LOGOUTTIME').value || '--',
-                date: document.getElementById('ATTDATE').value
-            };
-            await _SUPABASE.from('attendance').insert([RECORD]);
-            NOTIFY("LOG SAVED SUCCESSFULLY");
-            await FETCHDATA();
-        });
-
-        function HANDLESTATUSCHANGE() {
-            const S = document.getElementById('STATUS').value;
-            const OFF = (S === 'ABSENT' || S === 'ON-LEAVE');
-            document.getElementById('LOGINTIME').disabled = OFF;
-            document.getElementById('LOGOUTTIME').disabled = OFF;
-        }
-
-        function RENDERALL() {
-            RENDEREMPLOYEES();
-            RENDERATTENDANCE();
-            const SEL = document.getElementById('EMPLOYEESELECT');
-            SEL.innerHTML = '<option value="">CHOOSE STAFF</option>' + 
-                EMPLOYEES.map(E => `<option value="${E.id}">${E.name}</option>`).join('');
-        }
-
-        function RENDEREMPLOYEES() {
-            document.getElementById('EMPLOYEETABLEBODY').innerHTML = EMPLOYEES.map(E => `
-                <tr><td>${E.id}</td><td>${E.name}</td><td>${E.position}</td><td>${E.phone}</td>
-                <td><button onclick="EDITEMPLOYEE('${E.id}')" class="BTN BTN-SECONDARY" style="padding: 5px 12px; font-size: 0.65rem;">EDIT</button>
-                <button onclick="DELETEEMPLOYEE('${E.id}')" class="BTN BTN-DANGER" style="padding: 5px 12px; font-size: 0.65rem;">DEL</button></td></tr>
-            `).join('');
-        }
-
-        function RENDERATTENDANCE() {
-            const F = document.getElementById('DATEFILTER').value;
-            const FILT = ATTENDANCE.filter(A => !F || A.date === F);
-            
-            // UPDATE STATS BASED ON FILTERED DATA
-            const TOTAL = FILT.length;
-            const PRESENT = FILT.filter(A => A.status === 'PRESENT').length;
-            const ABSENT = FILT.filter(A => A.status === 'ABSENT').length;
-            const OTHER = TOTAL - PRESENT - ABSENT;
-
-            document.getElementById('STAT-TOTAL').innerText = TOTAL;
-            document.getElementById('STAT-PRESENT').innerText = PRESENT;
-            document.getElementById('STAT-ABSENT').innerText = ABSENT;
-            document.getElementById('STAT-OTHER').innerText = OTHER;
-
-            document.getElementById('ATTENDANCETABLEBODY').innerHTML = FILT.map(A => `
-                <tr><td>${A.emp_id}</td><td>${A.name}</td>
-                <td><span class="STATUS-BADGE STATUS-${A.status}">${A.status}</span></td>
-                <td>${A.login}</td><td>${A.logout}</td><td>${A.date}</td></tr>
-            `).join('') || '<tr><td colspan="6" style="text-align:center; padding: 40px; color:#AAA">NO RECORDS FOUND</td></tr>';
         }
 
         function NOTIFY(M) {

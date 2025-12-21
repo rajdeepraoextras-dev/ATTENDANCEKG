@@ -3,7 +3,529 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KHANAGO | ELITE MANAGEMENT</title>
+    <title>KHANAGO | ELITE MANAGEMENT</title><!DOCTYPE html>
+<html lang="HI">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KHANAGO | ATTENDANCE</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --PRIMARY: #FF6B00;
+            --PRIMARY-DARK: #E65A00;
+            --BG-PAGE: #F4F4F7;
+            --BG-WHITE: #FFFFFF;
+            --BORDER: #E0E0E0;
+            --TEXT-MAIN: #1A1A1A;
+            --TEXT-DIM: #666666;
+            --DANGER: #D32F2F;
+            --SUCCESS: #2E7D32;
+            --INFO: #2196F3;
+            --ORANGE-TINT: rgba(255, 107, 0, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Calibri', sans-serif; text-transform: uppercase; }
+        body { background: var(--BG-PAGE); color: var(--TEXT-MAIN); padding: 20px; min-height: 100vh; font-size: 14px; }
+        .CONTAINER { max-width: 1200px; margin: 0 auto; background: var(--BG-WHITE); border: 1px solid var(--BORDER); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; }
+
+        /* HEADER & TABS */
+        header { padding: 30px; border-bottom: 1px solid var(--BORDER); background: var(--BG-WHITE); }
+        header h1 { font-size: 2rem; letter-spacing: 1px; font-weight: 900; border-left: 6px solid var(--PRIMARY); padding-left: 20px; color: var(--TEXT-MAIN); }
+        header p { color: var(--PRIMARY); font-size: 1rem; margin-top: 5px; padding-left: 20px; font-weight: 700; }
+        
+        .TABS { display: flex; gap: 0px; background: #FAFAFA; border-bottom: 1px solid var(--BORDER); }
+        .TAB-BUTTON { flex: 1; background: none; border: none; color: var(--TEXT-DIM); padding: 20px 0; cursor: pointer; font-weight: 800; font-size: 0.9rem; position: relative; transition: 0.2s; }
+        .TAB-BUTTON:hover { background: #F0F0F0; }
+        .TAB-BUTTON.ACTIVE { color: var(--PRIMARY); background: #FFF; }
+        .TAB-BUTTON.ACTIVE::AFTER { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: var(--PRIMARY); }
+
+        /* ANALYTICS CARDS */
+        .STATS-GRID { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 30px; }
+        .STAT-CARD { background: var(--BG-WHITE); border: 1px solid var(--BORDER); padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .STAT-LABEL { font-size: 0.8rem; color: var(--TEXT-DIM); font-weight: 800; margin-bottom: 5px; }
+        .STAT-VALUE { font-size: 1.8rem; font-weight: 900; color: var(--TEXT-MAIN); }
+        .STAT-VALUE.ORANGE { color: var(--PRIMARY); }
+
+        /* CONTENT */
+        .TAB-CONTENT { display: none; padding: 30px; animation: FADEIN 0.3s EASE; }
+        .TAB-CONTENT.ACTIVE { display: block; }
+        h2 { font-size: 1.1rem; margin-bottom: 20px; letter-spacing: 1px; color: var(--TEXT-MAIN); font-weight: 800; border-bottom: 2px solid #EEE; padding-bottom: 10px; }
+
+        /* FORM */
+        .FORM-PANEL { background: #FFF8F5; border: 1px solid #FFD0B0; padding: 25px; border-radius: 8px; margin-bottom: 30px; }
+        .FORM-ROW { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .INPUT-GROUP { position: relative; }
+        
+        label { display: block; margin-bottom: 8px; font-size: 0.8rem; color: var(--TEXT-DIM); font-weight: 800; }
+        input, select { width: 100%; padding: 12px; border: 2px solid var(--BORDER); border-radius: 6px; font-weight: 700; background: #FFF; font-size: 0.9rem; }
+        input:focus, select:focus { outline: none; border-color: var(--PRIMARY); background: #FFF; }
+        input:disabled, select:disabled { background: #E0E0E0; color: #888; cursor: not-allowed; border-color: #DDD; }
+
+        .TIME-BTN { position: absolute; right: 8px; top: 32px; background: var(--TEXT-MAIN); color: white; border: none; font-size: 0.65rem; padding: 4px 10px; border-radius: 4px; cursor: pointer; }
+
+        /* ACTION BAR */
+        .ACTION-BAR { display: flex; gap: 15px; margin-top: 25px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+        .CURRENT-STATUS-DISPLAY { font-size: 0.9rem; font-weight: 800; color: var(--TEXT-DIM); background: #FFF; padding: 10px 20px; border-radius: 30px; border: 1px solid var(--BORDER); }
+        .STATUS-INDICATOR { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; background: #CCC; vertical-align: middle; }
+
+        /* BUTTONS */
+        .BTN { background: var(--PRIMARY); color: #FFF; border: none; padding: 15px 40px; font-weight: 900; cursor: pointer; border-radius: 6px; transition: 0.2s; font-size: 1rem; }
+        .BTN:hover { background: var(--PRIMARY-DARK); transform: translateY(-1px); }
+        .BTN-SECONDARY { background: #EEE; color: var(--TEXT-MAIN); padding: 10px 20px; font-size: 0.8rem; }
+        .BTN-DANGER { background: #FFF; border: 2px solid var(--DANGER); color: var(--DANGER); padding: 5px 15px; font-size: 0.75rem; }
+        .BTN-OUT { background: #222; color: #FFF; } /* Dark button for punch out */
+        
+        /* TABLE */
+        .TABLE-WRAPPER { overflow-x: auto; margin-top: 30px; border: 1px solid var(--BORDER); border-radius: 6px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; padding: 15px; background: #EEE; color: var(--TEXT-DIM); border-bottom: 2px solid #DDD; font-size: 0.8rem; }
+        td { padding: 15px; border-bottom: 1px solid #EEE; font-size: 0.9rem; font-weight: 600; color: #333; }
+        tr:hover td { background: #FFF8F0; }
+
+        .STATUS-BADGE { padding: 6px 12px; font-size: 0.75rem; font-weight: 900; border-radius: 4px; display: inline-block; }
+        .STATUS-PRESENT { background: #E8F5E9; color: var(--SUCCESS); }
+        .STATUS-ABSENT { background: #FFEBEE; color: var(--DANGER); }
+        .STATUS-HALF-DAY { background: #FFF3E0; color: var(--PRIMARY); }
+        .STATUS-ON-LEAVE { background: #E3F2FD; color: var(--INFO); }
+
+        .NOTIFICATION { position: fixed; bottom: 30px; right: 30px; background: #333; color: #FFF; padding: 15px 30px; font-weight: 700; border-radius: 8px; display: none; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-left: 5px solid var(--PRIMARY); }
+        
+        @media (max-width: 600px) {
+            header { padding: 20px; }
+            header h1 { font-size: 1.5rem; }
+            .TABS { gap: 0; }
+            .TAB-BUTTON { font-size: 0.75rem; padding: 15px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="CONTAINER">
+        <header>
+            <h1>KHANAGO</h1>
+            <p>हिंदी डैशबोर्ड (MANAGEMENT)</p>
+        </header>
+
+        <nav class="TABS">
+            <button class="TAB-BUTTON ACTIVE" data-tab="ATTENDANCE">हाजिरी (ATTENDANCE)</button>
+            <button class="TAB-BUTTON" data-tab="EMPLOYEES">स्टाफ लिस्ट (STAFF)</button>
+        </nav>
+
+        <main>
+            <div id="NOTIFICATION" class="NOTIFICATION"></div>
+
+            <div id="ATTENDANCE-TAB" class="TAB-CONTENT ACTIVE">
+                
+                <div class="STATS-GRID">
+                    <div class="STAT-CARD">
+                        <div class="STAT-LABEL">कुल स्टाफ (TOTAL)</div>
+                        <div class="STAT-VALUE" id="STAT-TOTAL">0</div>
+                    </div>
+                    <div class="STAT-CARD" style="border-bottom: 4px solid var(--SUCCESS);">
+                        <div class="STAT-LABEL">उपस्थित (PRESENT)</div>
+                        <div class="STAT-VALUE ORANGE" id="STAT-PRESENT">0</div>
+                    </div>
+                    <div class="STAT-CARD" style="border-bottom: 4px solid var(--DANGER);">
+                        <div class="STAT-LABEL">अनुपस्थित (ABSENT)</div>
+                        <div class="STAT-VALUE" id="STAT-ABSENT">0</div>
+                    </div>
+                </div>
+
+                <h2>हाजिरी लगाएं (MARK ATTENDANCE)</h2>
+                
+                <div class="FORM-PANEL">
+                    <form id="ATTENDANCEFORM">
+                        <div class="FORM-ROW">
+                            <div>
+                                <label>कर्मचारी चुनें (SELECT STAFF)</label>
+                                <select id="EMPLOYEESELECT" required onchange="DETECT_STATE()">
+                                    <option value="">लोड हो रहा है...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>तारीख (DATE)</label>
+                                <input type="date" id="ATTDATE" required onchange="DETECT_STATE()">
+                            </div>
+                            <div>
+                                <label>स्टेटस (STATUS)</label>
+                                <select id="STATUS" required onchange="HANDLE_STATUS_MANUAL()">
+                                    <option value="PRESENT">उपस्थित (PRESENT)</option>
+                                    <option value="ABSENT">अनुपस्थित (ABSENT)</option>
+                                    <option value="HALF-DAY">आधा दिन (HALF DAY)</option>
+                                    <option value="ON-LEAVE">छुट्टी पर (ON LEAVE)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="FORM-ROW">
+                            <div class="INPUT-GROUP">
+                                <label>आने का समय (IN TIME)</label>
+                                <input type="time" id="LOGINTIME">
+                                <button type="button" class="TIME-BTN" onclick="SET_TIME('LOGINTIME')">अभी (NOW)</button>
+                            </div>
+                            <div class="INPUT-GROUP">
+                                <label>जाने का समय (OUT TIME)</label>
+                                <input type="time" id="LOGOUTTIME">
+                                <button type="button" class="TIME-BTN" onclick="SET_TIME('LOGOUTTIME')">अभी (NOW)</button>
+                            </div>
+                        </div>
+
+                        <div class="ACTION-BAR">
+                            <div class="CURRENT-STATUS-DISPLAY">
+                                <span class="STATUS-INDICATOR" id="STATUS_DOT"></span>
+                                <span id="STATUS_TEXT">कर्मचारी चुनें (SELECT STAFF)</span>
+                            </div>
+                            
+                            <button type="submit" id="MAIN_ACTION_BTN" class="BTN">हाजिरी लगाएं</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="FORM-ROW" style="align-items: flex-end; border-top: 1px solid #EEE; padding-top: 20px;">
+                    <div style="flex-grow: 0;">
+                        <label>पुरानी हाजिरी देखें (VIEW DATE):</label>
+                        <input type="date" id="DATEFILTER">
+                    </div>
+                    <div style="flex-grow: 1; text-align: right;">
+                        <button onclick="FETCHDATA()" class="BTN BTN-SECONDARY">रिफ्रेश (REFRESH)</button>
+                    </div>
+                </div>
+
+                <div class="TABLE-WRAPPER">
+                    <table>
+                        <thead>
+                            <tr><th>नाम (NAME)</th><th>स्टेटस</th><th>आया (IN)</th><th>गया (OUT)</th><th>तारीख</th></tr>
+                        </thead>
+                        <tbody id="ATTENDANCETABLEBODY"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="EMPLOYEES-TAB" class="TAB-CONTENT">
+                <h2 id="EMPFORMTITLE">नया स्टाफ जोड़ें (ADD STAFF)</h2>
+                <form id="EMPLOYEEFORM">
+                    <div class="FORM-ROW">
+                        <div><label>आईडी (ID)</label><input type="text" id="EMPID" placeholder="KH-01" required></div>
+                        <div><label>पूरा नाम (FULL NAME)</label><input type="text" id="EMPNAME" placeholder="NAME" required></div>
+                        <div>
+                            <label>पद (POSITION)</label>
+                            <select id="POSITION">
+                                <option value="RIDER">राइडर (RIDER)</option>
+                                <option value="KITCHEN">किचन स्टाफ (KITCHEN)</option>
+                                <option value="MANAGER">मैनेजर (MANAGER)</option>
+                            </select>
+                        </div>
+                        <div><label>फ़ोन नंबर (PHONE)</label><input type="tel" id="PHONE" required></div>
+                    </div>
+                    <div style="display:flex; gap:15px;">
+                        <button type="submit" id="SAVEEMPBTN" class="BTN">सेव करें (SAVE)</button>
+                        <button type="button" id="CANCELEDIT" class="BTN BTN-SECONDARY" style="display:none;">केंसल (CANCEL)</button>
+                    </div>
+                </form>
+
+                <div class="TABLE-WRAPPER">
+                    <table>
+                        <thead>
+                            <tr><th>आईडी</th><th>नाम</th><th>पद</th><th>फ़ोन</th><th>हटाएं/सुधारें</th></tr>
+                        </thead>
+                        <tbody id="EMPLOYEETABLEBODY"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SUPABASE_URL = 'https://tyhrahuionsvzyuzdtkr.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5aHJhaHVpb25zdnp5dXpkdGtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzA4MTcsImV4cCI6MjA4MTY0NjgxN30.ypEmevr3XTuyNtJxUSSqCplAdcru9fkE3q15HOQHrVY';
+        const _SUPABASE = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let EMPLOYEES = [];
+        let ATTENDANCE = [];
+        let CURRENT_RECORD_ID = null; 
+        let EDITMODE = false;
+        let EDITID = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            INITDATES();
+            SETUPTABS();
+            await FETCHDATA();
+        });
+
+        function INITDATES() {
+            const TODAY = new Date().toISOString().split('T')[0];
+            document.getElementById('ATTDATE').value = TODAY;
+            document.getElementById('DATEFILTER').value = TODAY;
+        }
+
+        async function FETCHDATA() {
+            const { data: EDATA } = await _SUPABASE.from('employees').select('*').order('name');
+            EMPLOYEES = EDATA || [];
+            
+            const { data: ADATA } = await _SUPABASE.from('attendance').select('*').order('created_at', { ascending: false });
+            ATTENDANCE = ADATA || [];
+            
+            RENDERALL();
+            DETECT_STATE(); 
+        }
+
+        function SETUPTABS() {
+            document.querySelectorAll('.TAB-BUTTON').forEach(BTN => {
+                BTN.addEventListener('click', () => {
+                    document.querySelectorAll('.TAB-BUTTON, .TAB-CONTENT').forEach(EL => EL.classList.remove('ACTIVE'));
+                    BTN.classList.add('ACTIVE');
+                    document.getElementById(`${BTN.dataset.tab}-TAB`).classList.add('ACTIVE');
+                });
+            });
+        }
+
+        // --- INTELLIGENT DUPLICATE PREVENTION ---
+
+        function DETECT_STATE() {
+            const empId = document.getElementById('EMPLOYEESELECT').value;
+            const date = document.getElementById('ATTDATE').value;
+            const btn = document.getElementById('MAIN_ACTION_BTN');
+            const statusText = document.getElementById('STATUS_TEXT');
+            const statusDot = document.getElementById('STATUS_DOT');
+
+            // Clean inputs if no record loaded yet
+            if(!CURRENT_RECORD_ID) {
+                document.getElementById('LOGINTIME').value = '';
+                document.getElementById('LOGOUTTIME').value = '';
+            }
+
+            if (!empId) {
+                statusText.innerText = "कर्मचारी चुनें (Select Staff)";
+                statusDot.style.background = "#CCC";
+                return;
+            }
+
+            // DUPLICATE CHECK: Search if this person already has an entry today
+            const existing = ATTENDANCE.find(a => a.emp_id === empId && a.date === date);
+
+            if (existing) {
+                // ENTRY EXISTS -> EDIT MODE
+                CURRENT_RECORD_ID = existing.id;
+                
+                document.getElementById('STATUS').value = existing.status;
+                document.getElementById('LOGINTIME').value = existing.login;
+                document.getElementById('LOGOUTTIME').value = existing.logout;
+
+                if(existing.status === 'ABSENT' || existing.status === 'ON-LEAVE') {
+                    statusText.innerText = `पहले से सेव है: ${existing.status}`;
+                    statusDot.style.background = "var(--DANGER)";
+                    btn.innerText = "सुधारें (UPDATE)";
+                    btn.className = "BTN BTN-SECONDARY";
+                    
+                } else if (existing.login && (!existing.logout || existing.logout === '--')) {
+                    // Punched IN, waiting for OUT
+                    statusText.innerText = "काम पर है (WORKING NOW)";
+                    statusDot.style.background = "var(--SUCCESS)";
+                    
+                    document.getElementById('LOGINTIME').disabled = true; // Lock start time
+                    document.getElementById('LOGOUTTIME').disabled = false;
+                    
+                    btn.innerText = "छुट्टी (PUNCH OUT)";
+                    btn.className = "BTN BTN-OUT"; 
+
+                } else {
+                    // Shift Over
+                    statusText.innerText = "ड्यूटी ख़त्म (SHIFT DONE)";
+                    statusDot.style.background = "var(--PRIMARY)";
+                    btn.innerText = "सुधारें (UPDATE)";
+                    btn.className = "BTN BTN-SECONDARY";
+                }
+
+            } else {
+                // NEW ENTRY
+                CURRENT_RECORD_ID = null;
+                statusText.innerText = "अभी हाजिरी नहीं लगी";
+                statusDot.style.background = "#CCC";
+                
+                // Set Defaults
+                document.getElementById('STATUS').value = 'PRESENT';
+                document.getElementById('LOGINTIME').disabled = false;
+                document.getElementById('LOGOUTTIME').disabled = true;
+                document.getElementById('LOGINTIME').value = '';
+                document.getElementById('LOGOUTTIME').value = '';
+                
+                btn.innerText = "हाजिरी लगाएं (PUNCH IN)";
+                btn.className = "BTN"; // Orange
+            }
+        }
+
+        function SET_TIME(fieldId) {
+            const now = new Date();
+            const timeString = now.toTimeString().split(' ')[0].substring(0,5);
+            document.getElementById(fieldId).value = timeString;
+        }
+
+        function HANDLE_STATUS_MANUAL() {
+            const s = document.getElementById('STATUS').value;
+            if(s === 'ABSENT' || s === 'ON-LEAVE') {
+                document.getElementById('LOGINTIME').value = '--';
+                document.getElementById('LOGOUTTIME').value = '--';
+                document.getElementById('LOGINTIME').disabled = true;
+                document.getElementById('LOGOUTTIME').disabled = true;
+            } else {
+                document.getElementById('LOGINTIME').disabled = false;
+                // If checking out, keep login disabled
+                if(CURRENT_RECORD_ID && document.getElementById('LOGOUTTIME').value === '') {
+                    document.getElementById('LOGINTIME').disabled = true;
+                }
+            }
+        }
+
+        // --- SUBMIT ---
+        document.getElementById('ATTENDANCEFORM').addEventListener('submit', async (E) => {
+            E.preventDefault();
+            
+            const empId = document.getElementById('EMPLOYEESELECT').value;
+            if(!empId) return alert("पहले स्टाफ चुनें!");
+
+            const empObj = EMPLOYEES.find(e => e.id === empId);
+            const date = document.getElementById('ATTDATE').value;
+            const status = document.getElementById('STATUS').value;
+            let inTime = document.getElementById('LOGINTIME').value;
+            let outTime = document.getElementById('LOGOUTTIME').value;
+
+            // Final Double Check for Duplicates locally
+            const doubleCheck = ATTENDANCE.find(a => a.emp_id === empId && a.date === date);
+            if (!CURRENT_RECORD_ID && doubleCheck) {
+                alert("इस कर्मचारी की हाजिरी आज लग चुकी है! (Entry Exists)");
+                await FETCHDATA(); // Refresh logic
+                return;
+            }
+
+            if(status === 'PRESENT' || status === 'HALF-DAY') {
+                if(!inTime) inTime = new Date().toTimeString().substring(0,5); 
+            }
+
+            const payload = {
+                emp_id: empId, name: empObj.name, status: status,
+                login: inTime || '--', logout: outTime || '--', date: date
+            };
+
+            if (CURRENT_RECORD_ID) {
+                // UPDATE
+                const { error } = await _SUPABASE.from('attendance').update(payload).eq('id', CURRENT_RECORD_ID);
+                if(error) { alert("ERROR UPDATING"); return; }
+                NOTIFY(`अपडेट किया गया: ${empObj.name}`);
+            } else {
+                // NEW INSERT
+                const { error } = await _SUPABASE.from('attendance').insert([payload]);
+                if(error) { alert("ERROR SAVING"); return; }
+                NOTIFY(`हाजिरी लग गयी: ${empObj.name}`);
+            }
+
+            await FETCHDATA(); 
+        });
+
+        // --- RENDER ---
+        function RENDERALL() {
+            const sel = document.getElementById('EMPLOYEESELECT');
+            const currentVal = sel.value;
+            sel.innerHTML = '<option value="">स्टाफ चुनें (CHOOSE STAFF)</option>' + 
+                EMPLOYEES.map(E => `<option value="${E.id}">${E.name}</option>`).join('');
+            sel.value = currentVal;
+
+            RENDEREMPLOYEES();
+            RENDERATTENDANCE();
+        }
+
+        function RENDERATTENDANCE() {
+            const F = document.getElementById('DATEFILTER').value;
+            const FILT = ATTENDANCE.filter(A => !F || A.date === F);
+            
+            // STATS
+            const TOTAL = FILT.length;
+            const PRESENT = FILT.filter(A => A.status === 'PRESENT').length;
+            const ABSENT = FILT.filter(A => A.status === 'ABSENT').length;
+
+            document.getElementById('STAT-TOTAL').innerText = TOTAL;
+            document.getElementById('STAT-PRESENT').innerText = PRESENT;
+            document.getElementById('STAT-ABSENT').innerText = ABSENT;
+
+            document.getElementById('ATTENDANCETABLEBODY').innerHTML = FILT.map(A => `
+                <tr>
+                    <td><b>${A.name}</b></td>
+                    <td><span class="STATUS-BADGE STATUS-${A.status}">${A.status}</span></td>
+                    <td>${A.login}</td>
+                    <td>${A.logout}</td>
+                    <td>${A.date}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="5" style="text-align:center; padding: 30px; color:#AAA">कोई रिकॉर्ड नहीं मिला</td></tr>';
+        }
+
+        function RENDEREMPLOYEES() {
+            document.getElementById('EMPLOYEETABLEBODY').innerHTML = EMPLOYEES.map(E => `
+                <tr><td>${E.id}</td><td>${E.name}</td><td>${E.position}</td><td>${E.phone}</td>
+                <td><button onclick="EDITEMPLOYEE('${E.id}')" class="BTN BTN-SECONDARY" style="padding: 5px 10px;">EDIT</button>
+                <button onclick="DELETEEMPLOYEE('${E.id}')" class="BTN BTN-DANGER" style="padding: 5px 10px;">DEL</button></td></tr>
+            `).join('');
+        }
+
+        // --- EMPLOYEE MGMT ---
+        document.getElementById('EMPLOYEEFORM').addEventListener('submit', async (E) => {
+            E.preventDefault();
+            const DATA = {
+                id: document.getElementById('EMPID').value.toUpperCase(),
+                name: document.getElementById('EMPNAME').value.toUpperCase(),
+                position: document.getElementById('POSITION').value.toUpperCase(),
+                phone: document.getElementById('PHONE').value
+            };
+            if (EDITMODE) {
+                await _SUPABASE.from('employees').update(DATA).eq('id', EDITID);
+                NOTIFY("स्टाफ अपडेट हो गया");
+            } else {
+                const { error } = await _SUPABASE.from('employees').insert([DATA]);
+                if (error) return alert("ERROR: ये ID पहले से बनी है");
+                NOTIFY("नया स्टाफ जुड़ गया");
+            }
+            RESETEMPFORM();
+            await FETCHDATA();
+        });
+
+        async function DELETEEMPLOYEE(ID) {
+            if (confirm("क्या आप इसे हटाना चाहते हैं?")) {
+                await _SUPABASE.from('employees').delete().eq('id', ID);
+                await FETCHDATA();
+            }
+        }
+
+        function EDITEMPLOYEE(ID) {
+            const EMP = EMPLOYEES.find(E => E.id === ID);
+            document.getElementById('EMPID').value = EMP.id;
+            document.getElementById('EMPNAME').value = EMP.name;
+            document.getElementById('POSITION').value = EMP.position;
+            document.getElementById('PHONE').value = EMP.phone;
+            EDITMODE = true; EDITID = ID;
+            document.getElementById('EMPID').disabled = true;
+            document.getElementById('CANCELEDIT').style.display = "BLOCK";
+            document.getElementById('EMPFORMTITLE').innerText = "स्टाफ अपडेट करें";
+        }
+
+        function RESETEMPFORM() {
+            EDITMODE = false; EDITID = null;
+            document.getElementById('EMPLOYEEFORM').reset();
+            document.getElementById('EMPID').disabled = false;
+            document.getElementById('CANCELEDIT').style.display = "NONE";
+            document.getElementById('EMPFORMTITLE').innerText = "नया स्टाफ जोड़ें";
+        }
+
+        function NOTIFY(M) {
+            const N = document.getElementById('NOTIFICATION');
+            N.innerText = M; N.style.display = 'BLOCK';
+            setTimeout(() => N.style.display = 'NONE', 3000);
+        }
+
+        document.getElementById('DATEFILTER').addEventListener('change', RENDERATTENDANCE);
+        document.getElementById('CANCELEDIT').addEventListener('click', RESETEMPFORM);
+    </script>
+</body>
+</html>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {

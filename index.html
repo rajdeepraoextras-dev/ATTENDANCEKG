@@ -7,8 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --PRIMARY: #FF6B00; /* Orange */
-            --PRIMARY-DARK: #E65A00;
+            --PRIMARY: #FF6B00;
             --BG-PAGE: #F4F6F8;
             --BG-WHITE: #FFFFFF;
             --TEXT-MAIN: #222222;
@@ -26,23 +25,15 @@
         header h1 { font-size: 1.5rem; color: var(--PRIMARY); font-weight: 900; letter-spacing: 1px; }
         header p { font-size: 0.8rem; color: var(--TEXT-LIGHT); margin-top: 2px; }
 
-        /* TABS */
-        .TABS { display: flex; background: #FFF; margin: 10px; border-radius: 8px; border: 1px solid var(--BORDER); overflow: hidden; }
-        .TAB-BUTTON { flex: 1; padding: 15px; border: none; background: #FFF; font-weight: bold; color: var(--TEXT-LIGHT); cursor: pointer; font-size: 0.9rem; }
-        .TAB-BUTTON.ACTIVE { background: var(--PRIMARY); color: #FFF; }
-
-        /* CONTENT AREA */
-        .TAB-CONTENT { display: none; padding: 10px 15px; animation: FADEIN 0.3s; }
-        .TAB-CONTENT.ACTIVE { display: block; }
-        
         /* STATS CARDS */
-        .STATS-GRID { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .STATS-GRID { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px; }
         .STAT-CARD { background: #FFF; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--BORDER); box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
         .STAT-LABEL { font-size: 0.75rem; color: var(--TEXT-LIGHT); font-weight: bold; }
         .STAT-VALUE { font-size: 1.5rem; font-weight: 900; color: var(--TEXT-MAIN); margin-top: 5px; }
         .FULL-WIDTH { grid-column: span 2; }
 
         /* FORM STYLES */
+        .CONTAINER { padding: 0 20px; }
         .CARD { background: #FFF; padding: 20px; border-radius: 10px; border: 1px solid var(--BORDER); margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         h2 { font-size: 1.1rem; border-left: 4px solid var(--PRIMARY); padding-left: 10px; margin-bottom: 20px; color: var(--TEXT-MAIN); }
 
@@ -60,8 +51,6 @@
         .BTN:active { transform: scale(0.98); }
         .BTN-OUT { background: #333; }
         .BTN-UPDATE { background: #666; }
-        .BTN-DELETE { background: #FFF; border: 2px solid var(--DANGER); color: var(--DANGER); width: auto; padding: 8px 15px; font-size: 0.8rem; box-shadow: none; }
-        .BTN-EDIT { background: #EEE; color: #333; width: auto; padding: 8px 15px; font-size: 0.8rem; box-shadow: none; margin-right: 5px; }
 
         /* STATUS BADGES & TEXT */
         .STATUS-MSG { text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; padding: 10px; background: #F9F9F9; border-radius: 4px; border: 1px dashed #CCC; }
@@ -80,49 +69,41 @@
 
         /* NOTIFICATION */
         .TOAST { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #FFF; padding: 12px 25px; border-radius: 30px; font-size: 0.9rem; display: none; z-index: 999; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-
-        @keyframes FADEIN { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <header>
         <h1>खानागो (KHANAGO)</h1>
-        <p>स्टाफ मैनेजमेंट सिस्टम</p>
+        <p>डेली हाजिरी सिस्टम</p>
     </header>
-
-    <div class="TABS">
-        <button class="TAB-BUTTON ACTIVE" onclick="SWITCH_TAB('ATTENDANCE')">हाजिरी</button>
-        <button class="TAB-BUTTON" onclick="SWITCH_TAB('EMPLOYEES')">स्टाफ लिस्ट</button>
-    </div>
 
     <div id="TOAST" class="TOAST">मैसेज यहाँ आएगा</div>
 
-    <div id="ATTENDANCE-TAB" class="TAB-CONTENT ACTIVE">
-        
-        <div class="STATS-GRID">
-            <div class="STAT-CARD">
-                <div class="STAT-LABEL">कुल स्टाफ</div>
-                <div class="STAT-VALUE" id="STAT-TOTAL">0</div>
-            </div>
-            <div class="STAT-CARD">
-                <div class="STAT-LABEL">आज उपस्थित</div>
-                <div class="STAT-VALUE" id="STAT-PRESENT" style="color: var(--SUCCESS)">0</div>
-            </div>
-            <div class="STAT-CARD FULL-WIDTH">
-                <div class="STAT-LABEL">अनुपस्थित (Absent)</div>
-                <div class="STAT-VALUE" id="STAT-ABSENT" style="color: var(--DANGER)">0</div>
-            </div>
+    <div class="STATS-GRID">
+        <div class="STAT-CARD">
+            <div class="STAT-LABEL">कुल स्टाफ</div>
+            <div class="STAT-VALUE" id="STAT-TOTAL">0</div>
         </div>
+        <div class="STAT-CARD">
+            <div class="STAT-LABEL">आज उपस्थित</div>
+            <div class="STAT-VALUE" id="STAT-PRESENT" style="color: var(--SUCCESS)">0</div>
+        </div>
+        <div class="STAT-CARD FULL-WIDTH">
+            <div class="STAT-LABEL">अनुपस्थित (Absent)</div>
+            <div class="STAT-VALUE" id="STAT-ABSENT" style="color: var(--DANGER)">0</div>
+        </div>
+    </div>
 
+    <div class="CONTAINER">
         <div class="CARD">
             <h2>हाजिरी लगाएं</h2>
             <form id="ATTENDANCEFORM">
                 
                 <div class="INPUT-ROW">
-                    <label>किसकी हाजिरी लगानी है?</label>
+                    <label>स्टाफ चुनें (Select Staff)</label>
                     <select id="EMPLOYEESELECT" required onchange="CHECK_STATUS()">
-                        <option value="">स्टाफ का नाम चुनें...</option>
+                        <option value="">लोड हो रहा है...</option>
                     </select>
                 </div>
 
@@ -146,7 +127,7 @@
                     </select>
                 </div>
 
-                <div class="STATS-GRID" style="margin-bottom: 0;">
+                <div class="STATS-GRID" style="margin: 0 0 15px 0; gap: 15px;">
                     <div class="TIME-GROUP">
                         <label>आने का समय</label>
                         <input type="time" id="IN_TIME">
@@ -185,53 +166,15 @@
         </div>
     </div>
 
-    <div id="EMPLOYEES-TAB" class="TAB-CONTENT">
-        <div class="CARD">
-            <h2 id="EMP_FORM_TITLE">नया स्टाफ जोड़ें</h2>
-            <form id="EMPFORM">
-                <div class="INPUT-ROW"><label>आईडी (जैसे: KH-01)</label><input type="text" id="E_ID" placeholder="KH-01" required></div>
-                <div class="INPUT-ROW"><label>पूरा नाम</label><input type="text" id="E_NAME" placeholder="नाम लिखें" required></div>
-                <div class="INPUT-ROW">
-                    <label>काम (Position)</label>
-                    <select id="E_POS">
-                        <option value="RIDER">राइडर</option>
-                        <option value="KITCHEN">किचन</option>
-                        <option value="MANAGER">मैनेजर</option>
-                        <option value="OTHER">अन्य</option>
-                    </select>
-                </div>
-                <div class="INPUT-ROW"><label>मोबाइल नंबर</label><input type="tel" id="E_PHONE" required></div>
-                
-                <div style="display:flex; gap:10px;">
-                    <button type="submit" class="BTN">सेव करें</button>
-                    <button type="button" id="CANCEL_EDIT" class="BTN BTN-EDIT" style="display:none; width:100%; margin-top:10px;">केंसल</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="TABLE-CONTAINER">
-            <table>
-                <thead>
-                    <tr>
-                        <th>नाम / पद</th>
-                        <th>एक्शन</th>
-                    </tr>
-                </thead>
-                <tbody id="EMP_TABLE_BODY"></tbody>
-            </table>
-        </div>
-    </div>
-
     <script>
         // --- सेटिंग्स ---
         const SUPABASE_URL = 'https://tyhrahuionsvzyuzdtkr.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5aHJhaHVpb25zdnp5dXpkdGtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzA4MTcsImV4cCI6MjA4MTY0NjgxN30.ypEmevr3XTuyNtJxUSSqCplAdcru9fkE3q15HOQHrVY';
         const _SUPABASE = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let EMPLOYEES = [];
+        let STAFF_LIST = [];
         let ATTENDANCE = [];
         let CURRENT_RECORD_ID = null;
-        let EDIT_MODE = false;
 
         // --- शुरू होने पर ---
         document.addEventListener('DOMContentLoaded', async () => {
@@ -240,28 +183,17 @@
             await FETCH_DATA();
         });
 
-        // --- टैब बदलना ---
-        window.SWITCH_TAB = (tabName) => {
-            document.querySelectorAll('.TAB-CONTENT').forEach(el => el.classList.remove('ACTIVE'));
-            document.querySelectorAll('.TAB-BUTTON').forEach(el => el.classList.remove('ACTIVE'));
-            
-            document.getElementById(tabName + '-TAB').classList.add('ACTIVE');
-            event.target.classList.add('ACTIVE');
-        }
-
         // --- डाटा लाना ---
         async function FETCH_DATA() {
-            // स्टाफ लाना
-            let { data: eData } = await _SUPABASE.from('employees').select('*').order('name');
-            EMPLOYEES = eData || [];
+            // 1. अब हम 'staffs' टेबल से डाटा ला रहे हैं (schema: staff_id, name, position, location)
+            let { data: sData } = await _SUPABASE.from('staffs').select('*').order('name');
+            STAFF_LIST = sData || [];
 
-            // आज की तारीख
+            // 2. अटेंडेंस लाना
             const filterDate = document.getElementById('ATTDATE').value;
-
-            // अटेंडेंस लाना (सिर्फ आज की या पिछले 7 दिन की ताकि फ़ास्ट चले)
             let { data: aData } = await _SUPABASE.from('attendance')
                 .select('*')
-                .order('created_at', { ascending: false }); // सारे लाते हैं, फ़िल्टर JS में करेंगे 
+                .order('created_at', { ascending: false });
             
             ATTENDANCE = aData || [];
 
@@ -271,11 +203,11 @@
 
         // --- UI दिखाना ---
         function RENDER_UI() {
-            // 1. ड्रापडाउन भरना
+            // 1. ड्रापडाउन भरना (staff_id और name का उपयोग करके)
             const sel = document.getElementById('EMPLOYEESELECT');
             const savedVal = sel.value;
             sel.innerHTML = '<option value="">स्टाफ का नाम चुनें...</option>' + 
-                EMPLOYEES.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+                STAFF_LIST.map(s => `<option value="${s.staff_id}">${s.name} (${s.location})</option>`).join('');
             sel.value = savedVal;
 
             // 2. अटेंडेंस टेबल (सिर्फ सेलेक्ट की गयी तारीख की)
@@ -283,7 +215,7 @@
             const todayLogs = ATTENDANCE.filter(a => a.date === dateVal);
 
             // स्टेट्स गिनना
-            const total = EMPLOYEES.length; // कुल स्टाफ (जितने रजिस्टर्ड हैं)
+            const total = STAFF_LIST.length; 
             const present = todayLogs.filter(a => a.status === 'PRESENT').length;
             const absent = todayLogs.filter(a => a.status === 'ABSENT').length;
 
@@ -295,27 +227,12 @@
                 <tr>
                     <td>
                         <div style="font-weight:bold">${a.name}</div>
-                        <div style="font-size:0.75rem; color:#666">${a.emp_id}</div>
                     </td>
                     <td><span class="BADGE ${a.status === 'PRESENT' ? 'B-PRESENT' : 'B-ABSENT'}">${a.status}</span></td>
                     <td>${a.login}</td>
                     <td>${a.logout}</td>
                 </tr>
-            `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px; color:#999">आज का कोई रिकॉर्ड नहीं है</td></tr>';
-
-            // 3. एम्प्लोयी टेबल
-            document.getElementById('EMP_TABLE_BODY').innerHTML = EMPLOYEES.map(e => `
-                <tr>
-                    <td>
-                        <div style="font-weight:bold; font-size:1rem;">${e.name}</div>
-                        <div style="font-size:0.8rem; color:#666">${e.position} | ${e.phone}</div>
-                    </td>
-                    <td>
-                        <button class="BTN BTN-EDIT" onclick="EDIT_EMP('${e.id}')">EDIT</button>
-                        <button class="BTN BTN-DELETE" onclick="DEL_EMP('${e.id}')">DEL</button>
-                    </td>
-                </tr>
-            `).join('');
+            `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px; color:#999">कोई रिकॉर्ड नहीं है</td></tr>';
         }
 
         // --- स्मार्ट लॉजिक (डुप्लीकेट चेक) ---
@@ -335,13 +252,13 @@
             if (!empId) {
                 statusText.innerText = "कृपया स्टाफ चुनें";
                 dot.style.background = "#CCC";
-                btn.style.display = 'none'; // बटन छुपा दें
+                btn.style.display = 'none'; 
                 return;
             }
 
-            btn.style.display = 'block'; // बटन दिखाएं
+            btn.style.display = 'block'; 
 
-            // चेक करें क्या आज एंट्री है?
+            // चेक करें क्या आज एंट्री है? (यहाँ emp_id का मिलान staff_id से होगा)
             const existing = ATTENDANCE.find(a => a.emp_id === empId && a.date === date);
 
             if (existing) {
@@ -407,15 +324,19 @@
         // --- हाजिरी सबमिट ---
         document.getElementById('ATTENDANCEFORM').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const empId = document.getElementById('EMPLOYEESELECT').value;
-            const empName = EMPLOYEES.find(ep => ep.id === empId).name;
+            const staffId = document.getElementById('EMPLOYEESELECT').value;
+            
+            // Staff table से नाम निकालें
+            const staffObj = STAFF_LIST.find(s => s.staff_id === staffId);
+            const staffName = staffObj ? staffObj.name : 'Unknown';
+
             const date = document.getElementById('ATTDATE').value;
             const status = document.getElementById('STATUS').value;
             let inT = document.getElementById('IN_TIME').value;
             let outT = document.getElementById('OUT_TIME').value;
 
             // डबल चेक (डुप्लीकेट रोकने के लिए)
-            const doubleCheck = ATTENDANCE.find(a => a.emp_id === empId && a.date === date);
+            const doubleCheck = ATTENDANCE.find(a => a.emp_id === staffId && a.date === date);
             if (!CURRENT_RECORD_ID && doubleCheck) {
                 SHOW_TOAST("रुको! इसकी हाजिरी लग चुकी है।");
                 await FETCH_DATA();
@@ -424,9 +345,14 @@
 
             if (status === 'PRESENT' && !inT) inT = GET_TIME_NOW();
 
+            // हम attendance टेबल में emp_id की जगह staff_id भेज रहे हैं
             const payload = {
-                emp_id: empId, name: empName, status: status,
-                login: inT || '--', logout: outT || '--', date: date
+                emp_id: staffId, 
+                name: staffName, 
+                status: status,
+                login: inT || '--', 
+                logout: outT || '--', 
+                date: date
             };
 
             if (CURRENT_RECORD_ID) {
@@ -440,29 +366,6 @@
             await FETCH_DATA();
         });
 
-        // --- एम्प्लोयी सेव ---
-        document.getElementById('EMPFORM').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const data = {
-                id: document.getElementById('E_ID').value.toUpperCase(),
-                name: document.getElementById('E_NAME').value.toUpperCase(),
-                position: document.getElementById('E_POS').value,
-                phone: document.getElementById('E_PHONE').value
-            };
-
-            if (EDIT_MODE) {
-                await _SUPABASE.from('employees').update(data).eq('id', document.getElementById('E_ID').value);
-                SHOW_TOAST("स्टाफ अपडेट हो गया");
-                RESET_EMP();
-            } else {
-                const { error } = await _SUPABASE.from('employees').insert([data]);
-                if(error) return alert("ये ID पहले से मौजूद है!");
-                SHOW_TOAST("नया स्टाफ जुड़ गया");
-                document.getElementById('EMPFORM').reset();
-            }
-            await FETCH_DATA();
-        });
-
         // --- छोटे फंक्शन ---
         function SET_NOW(id) { document.getElementById(id).value = GET_TIME_NOW(); }
         function GET_TIME_NOW() { return new Date().toTimeString().substring(0,5); }
@@ -471,36 +374,6 @@
             const t = document.getElementById('TOAST');
             t.innerText = msg; t.style.display = 'block';
             setTimeout(() => t.style.display = 'none', 3000);
-        }
-
-        // --- एडिट / डिलीट ---
-        window.DEL_EMP = async (id) => {
-            if(confirm("पक्का डिलीट करना है?")) {
-                await _SUPABASE.from('employees').delete().eq('id', id);
-                await FETCH_DATA();
-            }
-        }
-
-        window.EDIT_EMP = (id) => {
-            const emp = EMPLOYEES.find(e => e.id === id);
-            document.getElementById('E_ID').value = emp.id;
-            document.getElementById('E_NAME').value = emp.name;
-            document.getElementById('E_POS').value = emp.position;
-            document.getElementById('E_PHONE').value = emp.phone;
-            
-            EDIT_MODE = true;
-            document.getElementById('E_ID').disabled = true; // ID नहीं बदल सकते
-            document.getElementById('CANCEL_EDIT').style.display = 'block';
-            document.getElementById('EMP_FORM_TITLE').innerText = "स्टाफ सुधारें";
-        }
-
-        document.getElementById('CANCEL_EDIT').addEventListener('click', RESET_EMP);
-        function RESET_EMP() {
-            EDIT_MODE = false;
-            document.getElementById('EMPFORM').reset();
-            document.getElementById('E_ID').disabled = false;
-            document.getElementById('CANCEL_EDIT').style.display = 'none';
-            document.getElementById('EMP_FORM_TITLE').innerText = "नया स्टाफ जोड़ें";
         }
     </script>
 </body>

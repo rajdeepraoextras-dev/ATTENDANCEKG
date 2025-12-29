@@ -3,171 +3,881 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#FF6B00">
     <title>खानागो | अटेंडेंस</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --PRIMARY: #FF6B00;
-            --BG-PAGE: #F4F6F8;
+            --PRIMARY-DARK: #E55A00;
+            --PRIMARY-LIGHT: #FF8533;
+            --PRIMARY-GLOW: rgba(255, 107, 0, 0.15);
+            --PRIMARY-GRADIENT: linear-gradient(135deg, #FF8533 0%, #FF6B00 50%, #E55A00 100%);
+            --BG-PAGE: #FFF8F3;
             --BG-WHITE: #FFFFFF;
-            --TEXT-MAIN: #222222;
-            --TEXT-LIGHT: #666666;
-            --DANGER: #D32F2F;
-            --SUCCESS: #2E7D32;
-            --BORDER: #DDDDDD;
+            --TEXT-MAIN: #1A1A2E;
+            --TEXT-LIGHT: #64748B;
+            --TEXT-MUTED: #94A3B8;
+            --DANGER: #EF4444;
+            --DANGER-BG: #FEF2F2;
+            --SUCCESS: #10B981;
+            --SUCCESS-BG: #ECFDF5;
+            --WARNING: #F59E0B;
+            --WARNING-BG: #FFFBEB;
+            --BORDER: #F1F5F9;
+            --SHADOW-SM: 0 1px 3px rgba(0,0,0,0.04);
+            --SHADOW-MD: 0 4px 6px rgba(0,0,0,0.04);
+            --SHADOW-LG: 0 10px 25px rgba(255,107,0,0.08);
+            --RADIUS-SM: 10px;
+            --RADIUS-MD: 14px;
+            --RADIUS-LG: 18px;
+            --RADIUS-XL: 24px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--BG-PAGE); color: var(--TEXT-MAIN); padding-bottom: 50px; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Poppins', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        
+        body { 
+            background: var(--BG-PAGE); 
+            color: var(--TEXT-MAIN); 
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
 
         /* HEADER */
-        header { background: var(--BG-WHITE); padding: 20px; border-bottom: 1px solid var(--BORDER); text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        header h1 { font-size: 1.5rem; color: var(--PRIMARY); font-weight: 900; letter-spacing: 1px; }
-        header p { font-size: 0.8rem; color: var(--TEXT-LIGHT); margin-top: 2px; }
+        header { 
+            background: var(--PRIMARY-GRADIENT);
+            padding: 16px 16px 60px; 
+            text-align: center; 
+        }
+        header .header-content { position: relative; z-index: 2; }
+        header .logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        header .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        header .logo-icon i { font-size: 20px; color: #FFF; }
+        header h1 { 
+            font-size: 1.4rem; 
+            color: #FFF; 
+            font-weight: 800; 
+        }
+        header p { 
+            font-size: 0.75rem; 
+            color: rgba(255,255,255,0.8); 
+            margin-top: 4px; 
+        }
 
         /* STATS CARDS */
-        .STATS-GRID { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px; }
-        .STAT-CARD { background: #FFF; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--BORDER); box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
-        .STAT-LABEL { font-size: 0.75rem; color: var(--TEXT-LIGHT); font-weight: bold; }
-        .STAT-VALUE { font-size: 1.5rem; font-weight: 900; color: var(--TEXT-MAIN); margin-top: 5px; }
-        .FULL-WIDTH { grid-column: span 2; }
+        .STATS-GRID { 
+            display: flex;
+            gap: 10px; 
+            margin: -40px 12px 16px;
+            position: relative;
+            z-index: 10;
+        }
+        .STAT-CARD { 
+            background: var(--BG-WHITE); 
+            padding: 14px 16px; 
+            border-radius: var(--RADIUS-MD); 
+            text-align: center; 
+            box-shadow: var(--SHADOW-LG);
+            flex: 1;
+        }
+        .STAT-ICON {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 6px;
+            font-size: 15px;
+        }
+        .STAT-ICON.total { background: var(--PRIMARY-GLOW); color: var(--PRIMARY); }
+        .STAT-ICON.present { background: var(--SUCCESS-BG); color: var(--SUCCESS); }
+        .STAT-ICON.absent { background: var(--DANGER-BG); color: var(--DANGER); }
+        .STAT-LABEL { 
+            font-size: 0.65rem; 
+            color: var(--TEXT-LIGHT); 
+            font-weight: 600; 
+            text-transform: uppercase;
+        }
+        .STAT-VALUE { 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            line-height: 1.2;
+        }
+        .STAT-VALUE.present { color: var(--SUCCESS); }
+        .STAT-VALUE.absent { color: var(--DANGER); }
 
-        /* FORM STYLES */
-        .CONTAINER { padding: 0 20px; }
-        .CARD { background: #FFF; padding: 20px; border-radius: 10px; border: 1px solid var(--BORDER); margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        h2 { font-size: 1.1rem; border-left: 4px solid var(--PRIMARY); padding-left: 10px; margin-bottom: 20px; color: var(--TEXT-MAIN); }
-
-        .INPUT-ROW { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: bold; color: var(--TEXT-LIGHT); }
-        input, select { width: 100%; padding: 14px; font-size: 1rem; border: 1px solid #CCC; border-radius: 6px; background: #FAFAFA; appearance: none; }
-        input:focus, select:focus { border-color: var(--PRIMARY); outline: none; background: #FFF; }
-
-        /* TIME BUTTONS */
-        .TIME-GROUP { position: relative; }
-        .NOW-BTN { position: absolute; right: 8px; top: 38px; background: #333; color: #FFF; border: none; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; }
-
-        /* ACTION BUTTONS */
-        .BTN { width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 900; cursor: pointer; color: #FFF; background: var(--PRIMARY); margin-top: 10px; box-shadow: 0 4px 6px rgba(255,107,0,0.2); }
-        .BTN:active { transform: scale(0.98); }
-        .BTN-OUT { background: #333; }
-        .BTN-UPDATE { background: #666; }
-
-        /* STATUS BADGES & TEXT */
-        .STATUS-MSG { text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; padding: 10px; background: #F9F9F9; border-radius: 4px; border: 1px dashed #CCC; }
-        .DOT { height: 10px; width: 10px; background: #CCC; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        /* MAIN CONTAINER */
+        .CONTAINER { padding: 0 12px; }
         
-        /* TABLE */
-        .TABLE-CONTAINER { overflow-x: auto; background: #FFF; border-radius: 8px; border: 1px solid var(--BORDER); }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
-        th { background: #F0F0F0; text-align: left; padding: 12px; font-size: 0.8rem; color: var(--TEXT-LIGHT); }
-        td { padding: 15px 12px; border-bottom: 1px solid #EEE; font-size: 0.9rem; font-weight: 600; }
-        tr:last-child td { border-bottom: none; }
+        /* CARD */
+        .CARD { 
+            background: var(--BG-WHITE); 
+            padding: 16px; 
+            border-radius: var(--RADIUS-XL); 
+            margin-bottom: 16px; 
+            box-shadow: var(--SHADOW-MD);
+        }
+        
+        /* SECTION TITLE */
+        .SECTION-TITLE {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--TEXT-MAIN);
+        }
+        .SECTION-TITLE i {
+            width: 32px;
+            height: 32px;
+            background: var(--PRIMARY-GLOW);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--PRIMARY);
+            font-size: 14px;
+        }
 
-        .BADGE { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-        .B-PRESENT { background: #E8F5E9; color: var(--SUCCESS); }
-        .B-ABSENT { background: #FFEBEE; color: var(--DANGER); }
+        /* STAFF SELECT */
+        .STAFF-SELECT-WRAPPER {
+            margin-bottom: 16px;
+        }
+        .STAFF-SELECT-LABEL {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--TEXT-LIGHT);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .STAFF-SELECT {
+            width: 100%;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 2px solid var(--BORDER);
+            border-radius: var(--RADIUS-MD);
+            background: #FAFBFC;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23FF6B00' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 20px;
+            color: var(--TEXT-MAIN);
+        }
+        .STAFF-SELECT:focus {
+            border-color: var(--PRIMARY);
+            outline: none;
+            box-shadow: 0 0 0 4px var(--PRIMARY-GLOW);
+        }
 
-        /* NOTIFICATION */
-        .TOAST { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #FFF; padding: 12px 25px; border-radius: 30px; font-size: 0.9rem; display: none; z-index: 999; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        /* DATE PICKER */
+        .DATE-ROW {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .DATE-INPUT-WRAPPER {
+            flex: 1;
+        }
+        .DATE-INPUT {
+            width: 100%;
+            padding: 14px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: 2px solid var(--BORDER);
+            border-radius: var(--RADIUS-MD);
+            background: #FAFBFC;
+            color: var(--TEXT-MAIN);
+        }
+        .DATE-INPUT:focus {
+            border-color: var(--PRIMARY);
+            outline: none;
+        }
+        .TODAY-BTN {
+            padding: 14px 18px;
+            background: var(--PRIMARY-GLOW);
+            border: none;
+            border-radius: var(--RADIUS-MD);
+            color: var(--PRIMARY);
+            font-weight: 700;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        .TODAY-BTN:active {
+            background: var(--PRIMARY);
+            color: #FFF;
+        }
+
+        /* STATUS INDICATOR */
+        .STATUS-INDICATOR {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            background: linear-gradient(135deg, #FFF9F5 0%, #FFF5EE 100%);
+            border-radius: var(--RADIUS-MD);
+            margin-bottom: 16px;
+            border: 2px dashed rgba(255,107,0,0.2);
+        }
+        .STATUS-DOT {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--TEXT-MUTED);
+        }
+        .STATUS-DOT.working {
+            background: var(--SUCCESS);
+            animation: pulse 1.5s infinite;
+        }
+        .STATUS-DOT.done { background: var(--PRIMARY); }
+        .STATUS-DOT.absent { background: var(--DANGER); }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+        }
+        .STATUS-TEXT {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--TEXT-MAIN);
+        }
+
+        /* QUICK STATUS BUTTONS */
+        .STATUS-BTNS {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .STATUS-BTN {
+            padding: 12px 8px;
+            border: 2px solid var(--BORDER);
+            border-radius: var(--RADIUS-SM);
+            background: #FFF;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--TEXT-LIGHT);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .STATUS-BTN i { font-size: 1.1rem; }
+        .STATUS-BTN.active {
+            border-color: var(--PRIMARY);
+            background: var(--PRIMARY-GLOW);
+            color: var(--PRIMARY);
+        }
+        .STATUS-BTN.present.active { border-color: var(--SUCCESS); background: var(--SUCCESS-BG); color: var(--SUCCESS); }
+        .STATUS-BTN.absent.active { border-color: var(--DANGER); background: var(--DANGER-BG); color: var(--DANGER); }
+        .STATUS-BTN.halfday.active { border-color: var(--WARNING); background: var(--WARNING-BG); color: var(--WARNING); }
+        .STATUS-BTN.leave.active { border-color: #8B5CF6; background: #F3E8FF; color: #8B5CF6; }
+
+        /* TIME INPUT SECTION */
+        .TIME-SECTION {
+            background: #FAFBFC;
+            border-radius: var(--RADIUS-MD);
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+        .TIME-SECTION-TITLE {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--TEXT-LIGHT);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .TIME-ROW {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .TIME-INPUT-GROUP {
+            position: relative;
+        }
+        .TIME-LABEL {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--TEXT-MUTED);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .TIME-LABEL i { color: var(--PRIMARY); }
+        .TIME-INPUT-ROW {
+            display: flex;
+            gap: 6px;
+        }
+        .TIME-INPUT {
+            flex: 1;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            border: 2px solid var(--BORDER);
+            border-radius: var(--RADIUS-SM);
+            background: #FFF;
+            color: var(--TEXT-MAIN);
+            text-align: center;
+        }
+        .TIME-INPUT:focus {
+            border-color: var(--PRIMARY);
+            outline: none;
+        }
+        .NOW-BTN {
+            padding: 12px;
+            background: var(--PRIMARY-GRADIENT);
+            border: none;
+            border-radius: var(--RADIUS-SM);
+            color: #FFF;
+            font-size: 0.7rem;
+            font-weight: 700;
+            min-width: 50px;
+        }
+        .NOW-BTN:active {
+            transform: scale(0.95);
+        }
+
+        /* MAIN ACTION BUTTON */
+        .SUBMIT-BTN {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: var(--RADIUS-MD);
+            font-size: 1rem;
+            font-weight: 700;
+            color: #FFF;
+            background: var(--PRIMARY-GRADIENT);
+            box-shadow: 0 6px 20px rgba(255,107,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .SUBMIT-BTN:active {
+            transform: scale(0.98);
+        }
+        .SUBMIT-BTN.out {
+            background: linear-gradient(135deg, #374151 0%, #1F2937 100%);
+            box-shadow: 0 6px 20px rgba(31,41,55,0.3);
+        }
+        .SUBMIT-BTN.update {
+            background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+            box-shadow: 0 6px 20px rgba(99,102,241,0.3);
+        }
+        .SUBMIT-BTN i { font-size: 1.2rem; }
+
+        /* RECORDS SECTION */
+        .RECORDS-HEADER {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .REFRESH-BTN {
+            padding: 10px 14px;
+            background: var(--PRIMARY-GLOW);
+            border: none;
+            border-radius: var(--RADIUS-SM);
+            color: var(--PRIMARY);
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .REFRESH-BTN:active {
+            background: var(--PRIMARY);
+            color: #FFF;
+        }
+
+        /* RECORDS LIST */
+        .RECORDS-LIST {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 350px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .RECORD-CARD {
+            display: flex;
+            align-items: center;
+            padding: 14px;
+            background: #FAFBFC;
+            border-radius: var(--RADIUS-MD);
+            gap: 12px;
+        }
+        .RECORD-AVATAR {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--PRIMARY-GLOW);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--PRIMARY);
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .RECORD-INFO {
+            flex: 1;
+            min-width: 0;
+        }
+        .RECORD-NAME {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--TEXT-MAIN);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .RECORD-TIME {
+            font-size: 0.75rem;
+            color: var(--TEXT-LIGHT);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .RECORD-TIME i { color: var(--PRIMARY); font-size: 0.7rem; }
+        .RECORD-BADGE {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .RECORD-BADGE.present { background: var(--SUCCESS-BG); color: var(--SUCCESS); }
+        .RECORD-BADGE.absent { background: var(--DANGER-BG); color: var(--DANGER); }
+        .RECORD-BADGE.halfday { background: var(--WARNING-BG); color: var(--WARNING); }
+        .RECORD-BADGE.leave { background: #F3E8FF; color: #8B5CF6; }
+
+        /* EMPTY STATE */
+        .EMPTY-STATE {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--TEXT-MUTED);
+        }
+        .EMPTY-STATE i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            opacity: 0.3;
+        }
+        .EMPTY-STATE p {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* HISTORY SECTION */
+        .HISTORY-CARD { margin-top: 16px; }
+        .HISTORY-TOGGLE {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        .HISTORY-TOGGLE i.fa-chevron-down { 
+            transition: transform 0.3s;
+            color: var(--TEXT-LIGHT);
+        }
+        .HISTORY-TOGGLE.expanded i.fa-chevron-down { transform: rotate(180deg); }
+        .HISTORY-CONTENT { 
+            display: none; 
+            margin-top: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .HISTORY-CONTENT.show { display: block; }
+        .DATE-GROUP { 
+            margin-bottom: 20px; 
+            border-bottom: 1px solid var(--BORDER); 
+            padding-bottom: 16px; 
+        }
+        .DATE-GROUP:last-child { 
+            border-bottom: none; 
+            margin-bottom: 0; 
+            padding-bottom: 0; 
+        }
+        .DATE-GROUP-HEADER {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, var(--PRIMARY), var(--PRIMARY-DARK));
+            color: white;
+            border-radius: var(--RADIUS-MD);
+            margin-bottom: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .DATE-GROUP-HEADER i { opacity: 0.9; }
+        .DATE-GROUP-HEADER .date-text { flex: 1; }
+        .DATE-GROUP-HEADER .date-count {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+        .HISTORY-RECORDS { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+        }
+        .HISTORY-ITEM {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: var(--BG);
+            border-radius: var(--RADIUS-MD);
+        }
+        .HISTORY-AVATAR {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--PRIMARY-GLOW);
+            color: var(--PRIMARY);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .HISTORY-INFO { 
+            flex: 1; 
+            min-width: 0; 
+        }
+        .HISTORY-NAME { 
+            font-weight: 600; 
+            font-size: 0.85rem; 
+            color: var(--TEXT-MAIN); 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+        .HISTORY-TIME { 
+            font-size: 0.7rem; 
+            color: var(--TEXT-LIGHT); 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .HISTORY-TIME i { 
+            font-size: 0.6rem; 
+            color: var(--PRIMARY); 
+        }
+        .HISTORY-STATUS {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .HISTORY-STATUS.present { background: var(--SUCCESS-BG); color: var(--SUCCESS); }
+        .HISTORY-STATUS.absent { background: var(--DANGER-BG); color: var(--DANGER); }
+        .HISTORY-STATUS.halfday { background: var(--WARNING-BG); color: var(--WARNING); }
+        .HISTORY-STATUS.leave { background: #F3E8FF; color: #8B5CF6; }
+        .LOAD-MORE-BTN {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            margin-top: 16px;
+            background: var(--BG);
+            border: 2px dashed var(--BORDER);
+            border-radius: var(--RADIUS-MD);
+            color: var(--TEXT-LIGHT);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .LOAD-MORE-BTN:hover { 
+            border-color: var(--PRIMARY); 
+            color: var(--PRIMARY); 
+        }
+
+        /* TOAST NOTIFICATION */
+        .TOAST { 
+            position: fixed; 
+            bottom: 30px; 
+            left: 12px;
+            right: 12px;
+            transform: translateY(150px); 
+            background: var(--TEXT-MAIN);
+            color: #FFF; 
+            padding: 16px 20px; 
+            border-radius: var(--RADIUS-MD); 
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 999; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .TOAST.show {
+            transform: translateY(0);
+        }
+        .TOAST i {
+            font-size: 1.3rem;
+            color: var(--PRIMARY-LIGHT);
+        }
+
+        /* HIDDEN ELEMENTS */
+        .HIDDEN { display: none !important; }
+
+        /* LOADING OVERLAY */
+        .LOADING-OVERLAY {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .LOADING-SPINNER {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--BORDER);
+            border-top-color: var(--PRIMARY);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* iOS SAFE AREAS */
+        @supports (padding: max(0px)) {
+            .CONTAINER { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>खानागो (KHANAGO)</h1>
-        <p>डेली हाजिरी सिस्टम</p>
+        <div class="header-content">
+            <div class="logo-row">
+                <div class="logo-icon">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <div>
+                    <h1>खानागो</h1>
+                    <p>हाजिरी सिस्टम</p>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <div id="TOAST" class="TOAST">मैसेज यहाँ आएगा</div>
+    <div id="TOAST" class="TOAST"><i class="fas fa-check-circle"></i> <span>मैसेज</span></div>
 
+    <!-- STATS -->
     <div class="STATS-GRID">
         <div class="STAT-CARD">
-            <div class="STAT-LABEL">कुल स्टाफ</div>
+            <div class="STAT-ICON total"><i class="fas fa-users"></i></div>
+            <div class="STAT-LABEL">कुल</div>
             <div class="STAT-VALUE" id="STAT-TOTAL">0</div>
         </div>
         <div class="STAT-CARD">
-            <div class="STAT-LABEL">आज उपस्थित</div>
-            <div class="STAT-VALUE" id="STAT-PRESENT" style="color: var(--SUCCESS)">0</div>
+            <div class="STAT-ICON present"><i class="fas fa-check"></i></div>
+            <div class="STAT-LABEL">उपस्थित</div>
+            <div class="STAT-VALUE present" id="STAT-PRESENT">0</div>
         </div>
-        <div class="STAT-CARD FULL-WIDTH">
-            <div class="STAT-LABEL">अनुपस्थित (Absent)</div>
-            <div class="STAT-VALUE" id="STAT-ABSENT" style="color: var(--DANGER)">0</div>
+        <div class="STAT-CARD">
+            <div class="STAT-ICON absent"><i class="fas fa-times"></i></div>
+            <div class="STAT-LABEL">अनुपस्थित</div>
+            <div class="STAT-VALUE absent" id="STAT-ABSENT">0</div>
         </div>
     </div>
 
     <div class="CONTAINER">
+        <!-- ATTENDANCE FORM -->
         <div class="CARD">
-            <h2>हाजिरी लगाएं</h2>
+            <div class="SECTION-TITLE">
+                <i class="fas fa-clipboard-check"></i>
+                <span>हाजिरी लगाएं</span>
+            </div>
+
             <form id="ATTENDANCEFORM">
-                
-                <div class="INPUT-ROW">
-                    <label>स्टाफ चुनें (Select Staff)</label>
-                    <select id="EMPLOYEESELECT" required onchange="CHECK_STATUS()">
-                        <option value="">लोड हो रहा है...</option>
+                <!-- Staff Select -->
+                <div class="STAFF-SELECT-WRAPPER">
+                    <label class="STAFF-SELECT-LABEL"><i class="fas fa-user"></i> स्टाफ चुनें</label>
+                    <select id="EMPLOYEESELECT" class="STAFF-SELECT" required onchange="CHECK_STATUS()">
+                        <option value="">-- स्टाफ चुनें --</option>
                     </select>
                 </div>
 
-                <div class="INPUT-ROW">
-                    <label>तारीख</label>
-                    <input type="date" id="ATTDATE" required onchange="CHECK_STATUS()">
-                </div>
-
-                <div class="STATUS-MSG">
-                    <span id="STATUS_DOT" class="DOT"></span>
-                    <span id="STATUS_TEXT">स्टाफ चुनें</span>
-                </div>
-
-                <div class="INPUT-ROW">
-                    <label>स्थिति (Status)</label>
-                    <select id="STATUS" onchange="HANDLE_MANUAL_STATUS()">
-                        <option value="PRESENT">उपस्थित (Present)</option>
-                        <option value="ABSENT">अनुपस्थित (Absent)</option>
-                        <option value="HALF-DAY">आधा दिन (Half Day)</option>
-                        <option value="ON-LEAVE">छुट्टी (Leave)</option>
-                    </select>
-                </div>
-
-                <div class="STATS-GRID" style="margin: 0 0 15px 0; gap: 15px;">
-                    <div class="TIME-GROUP">
-                        <label>आने का समय</label>
-                        <input type="time" id="IN_TIME">
-                        <button type="button" class="NOW-BTN" onclick="SET_NOW('IN_TIME')">अभी</button>
+                <!-- Date Row -->
+                <div class="DATE-ROW">
+                    <div class="DATE-INPUT-WRAPPER">
+                        <input type="date" id="ATTDATE" class="DATE-INPUT" required onchange="CHECK_STATUS()">
                     </div>
-                    <div class="TIME-GROUP">
-                        <label>जाने का समय</label>
-                        <input type="time" id="OUT_TIME" disabled>
-                        <button type="button" class="NOW-BTN" onclick="SET_NOW('OUT_TIME')">अभी</button>
+                    <button type="button" class="TODAY-BTN" onclick="SET_TODAY()">
+                        <i class="fas fa-calendar-day"></i> आज
+                    </button>
+                </div>
+
+                <!-- Status Indicator -->
+                <div class="STATUS-INDICATOR">
+                    <span id="STATUS_DOT" class="STATUS-DOT"></span>
+                    <span id="STATUS_TEXT" class="STATUS-TEXT">स्टाफ चुनें</span>
+                </div>
+
+                <!-- Quick Status Buttons -->
+                <div class="STATUS-BTNS">
+                    <button type="button" class="STATUS-BTN present active" data-status="PRESENT" onclick="SET_STATUS('PRESENT')">
+                        <i class="fas fa-check-circle"></i>
+                        <span>उपस्थित</span>
+                    </button>
+                    <button type="button" class="STATUS-BTN absent" data-status="ABSENT" onclick="SET_STATUS('ABSENT')">
+                        <i class="fas fa-times-circle"></i>
+                        <span>अनुपस्थित</span>
+                    </button>
+                    <button type="button" class="STATUS-BTN halfday" data-status="HALF-DAY" onclick="SET_STATUS('HALF-DAY')">
+                        <i class="fas fa-adjust"></i>
+                        <span>आधा दिन</span>
+                    </button>
+                    <button type="button" class="STATUS-BTN leave" data-status="ON-LEAVE" onclick="SET_STATUS('ON-LEAVE')">
+                        <i class="fas fa-plane"></i>
+                        <span>छुट्टी</span>
+                    </button>
+                </div>
+                <input type="hidden" id="STATUS" value="PRESENT">
+
+                <!-- Time Section -->
+                <div class="TIME-SECTION" id="TIME_SECTION">
+                    <div class="TIME-SECTION-TITLE">
+                        <i class="fas fa-clock"></i> समय दर्ज करें (Check-In & Check-Out दोनों भर सकते हैं)
+                    </div>
+                    <div class="TIME-ROW">
+                        <div class="TIME-INPUT-GROUP">
+                            <label class="TIME-LABEL"><i class="fas fa-sign-in-alt"></i> आने का समय</label>
+                            <div class="TIME-INPUT-ROW">
+                                <input type="time" id="IN_TIME" class="TIME-INPUT">
+                                <button type="button" class="NOW-BTN" onclick="SET_NOW('IN_TIME')">
+                                    <i class="fas fa-bolt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="TIME-INPUT-GROUP">
+                            <label class="TIME-LABEL"><i class="fas fa-sign-out-alt"></i> जाने का समय</label>
+                            <div class="TIME-INPUT-ROW">
+                                <input type="time" id="OUT_TIME" class="TIME-INPUT">
+                                <button type="button" class="NOW-BTN" onclick="SET_NOW('OUT_TIME')">
+                                    <i class="fas fa-bolt"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" id="MAIN_BTN" class="BTN">हाजिरी लगाएं (Punch In)</button>
+                <!-- Submit Button -->
+                <button type="submit" id="MAIN_BTN" class="SUBMIT-BTN">
+                    <i class="fas fa-check"></i>
+                    <span>हाजिरी सेव करें</span>
+                </button>
             </form>
         </div>
 
-        <div class="CARD" style="padding: 15px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; border:none; padding:0; font-size:1rem;">आज का रिकॉर्ड</h2>
-                <button onclick="FETCH_DATA()" style="background:#EEE; border:none; padding:5px 10px; border-radius:4px; font-weight:bold;">रिफ्रेश</button>
+        <!-- RECORDS -->
+        <div class="CARD">
+            <div class="RECORDS-HEADER">
+                <div class="SECTION-TITLE" style="margin-bottom:0;">
+                    <i class="fas fa-list"></i>
+                    <span>आज का रिकॉर्ड</span>
+                </div>
+                <button class="REFRESH-BTN" onclick="FETCH_DATA()">
+                    <i class="fas fa-sync-alt"></i> रिफ्रेश
+                </button>
             </div>
             
-            <div class="TABLE-CONTAINER">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>नाम</th>
-                            <th>स्थिति</th>
-                            <th>आया</th>
-                            <th>गया</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ATT_TABLE_BODY"></tbody>
-                </table>
+            <div class="RECORDS-LIST" id="RECORDS_LIST">
+                <div class="EMPTY-STATE">
+                    <i class="fas fa-inbox"></i>
+                    <p>कोई रिकॉर्ड नहीं</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="CARD HISTORY-CARD">
+            <div class="HISTORY-TOGGLE" onclick="TOGGLE_HISTORY()">
+                <div class="SECTION-TITLE" style="margin-bottom:0;">
+                    <i class="fas fa-history"></i>
+                    <span>पिछला इतिहास</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="HISTORY-CONTENT" id="HISTORY_CONTENT">
+                <div id="HISTORY_LIST">
+                    <div class="EMPTY-STATE">
+                        <i class="fas fa-calendar-times"></i>
+                        <p>कोई पुराना रिकॉर्ड नहीं</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <div id="LOADING" class="LOADING-OVERLAY HIDDEN">
+        <div class="LOADING-SPINNER"></div>
+    </div>
+
     <script>
-        // --- सेटिंग्स ---
+        // --- CONFIG ---
         const SUPABASE_URL = 'https://tyhrahuionsvzyuzdtkr.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5aHJhaHVpb25zdnp5dXpkdGtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzA4MTcsImV4cCI6MjA4MTY0NjgxN30.ypEmevr3XTuyNtJxUSSqCplAdcru9fkE3q15HOQHrVY';
         const _SUPABASE = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -175,67 +885,123 @@
         let STAFF_LIST = [];
         let ATTENDANCE = [];
         let CURRENT_RECORD_ID = null;
+        let SELECTED_STATUS = 'PRESENT';
 
-        // --- शुरू होने पर ---
+        // --- INIT ---
         document.addEventListener('DOMContentLoaded', async () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('ATTDATE').value = today;
+            SET_TODAY();
             await FETCH_DATA();
         });
 
-        // --- डाटा लाना ---
-        async function FETCH_DATA() {
-            // 1. अब हम 'staffs' टेबल से डाटा ला रहे हैं (schema: staff_id, name, position, location)
-            let { data: sData } = await _SUPABASE.from('staffs').select('*').order('name');
-            STAFF_LIST = sData || [];
-
-            // 2. अटेंडेंस लाना
-            const filterDate = document.getElementById('ATTDATE').value;
-            let { data: aData } = await _SUPABASE.from('attendance')
-                .select('*')
-                .order('created_at', { ascending: false });
-            
-            ATTENDANCE = aData || [];
-
-            RENDER_UI();
+        // --- SET TODAY ---
+        function SET_TODAY() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('ATTDATE').value = today;
             CHECK_STATUS();
         }
 
-        // --- UI दिखाना ---
+        // --- SHOW/HIDE LOADING ---
+        function SHOW_LOADING() { document.getElementById('LOADING').classList.remove('HIDDEN'); }
+        function HIDE_LOADING() { document.getElementById('LOADING').classList.add('HIDDEN'); }
+
+        // --- FETCH DATA ---
+        async function FETCH_DATA() {
+            SHOW_LOADING();
+            try {
+                let { data: sData } = await _SUPABASE.from('staffs').select('*').order('name');
+                STAFF_LIST = sData || [];
+
+                let { data: aData } = await _SUPABASE.from('attendance')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                ATTENDANCE = aData || [];
+
+                RENDER_UI();
+                CHECK_STATUS();
+            } catch(e) {
+                SHOW_TOAST("डाटा लोड करने में समस्या!");
+            }
+            HIDE_LOADING();
+        }
+
+        // --- RENDER UI ---
         function RENDER_UI() {
-            // 1. ड्रापडाउन भरना (staff_id और name का उपयोग करके)
+            // Staff dropdown
             const sel = document.getElementById('EMPLOYEESELECT');
             const savedVal = sel.value;
-            sel.innerHTML = '<option value="">स्टाफ का नाम चुनें...</option>' + 
-                STAFF_LIST.map(s => `<option value="${s.staff_id}">${s.name} (${s.location})</option>`).join('');
+            sel.innerHTML = '<option value="">-- स्टाफ चुनें --</option>' + 
+                STAFF_LIST.map(s => `<option value="${s.staff_id}">${s.name}${s.location ? ' ('+s.location+')' : ''}</option>`).join('');
             sel.value = savedVal;
 
-            // 2. अटेंडेंस टेबल (सिर्फ सेलेक्ट की गयी तारीख की)
+            // Stats
             const dateVal = document.getElementById('ATTDATE').value;
             const todayLogs = ATTENDANCE.filter(a => a.date === dateVal);
 
-            // स्टेट्स गिनना
-            const total = STAFF_LIST.length; 
-            const present = todayLogs.filter(a => a.status === 'PRESENT').length;
-            const absent = todayLogs.filter(a => a.status === 'ABSENT').length;
+            document.getElementById('STAT-TOTAL').innerText = STAFF_LIST.length;
+            document.getElementById('STAT-PRESENT').innerText = todayLogs.filter(a => a.status === 'PRESENT' || a.status === 'HALF-DAY').length;
+            document.getElementById('STAT-ABSENT').innerText = todayLogs.filter(a => a.status === 'ABSENT' || a.status === 'ON-LEAVE').length;
 
-            document.getElementById('STAT-TOTAL').innerText = total;
-            document.getElementById('STAT-PRESENT').innerText = present;
-            document.getElementById('STAT-ABSENT').innerText = absent;
-
-            document.getElementById('ATT_TABLE_BODY').innerHTML = todayLogs.map(a => `
-                <tr>
-                    <td>
-                        <div style="font-weight:bold">${a.name}</div>
-                    </td>
-                    <td><span class="BADGE ${a.status === 'PRESENT' ? 'B-PRESENT' : 'B-ABSENT'}">${a.status}</span></td>
-                    <td>${a.login}</td>
-                    <td>${a.logout}</td>
-                </tr>
-            `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px; color:#999">कोई रिकॉर्ड नहीं है</td></tr>';
+            // Records list (card-based)
+            const recordsList = document.getElementById('RECORDS_LIST');
+            if (todayLogs.length > 0) {
+                recordsList.innerHTML = todayLogs.map(a => {
+                    let badgeClass = 'absent';
+                    if (a.status === 'PRESENT') badgeClass = 'present';
+                    else if (a.status === 'HALF-DAY') badgeClass = 'halfday';
+                    else if (a.status === 'ON-LEAVE') badgeClass = 'leave';
+                    
+                    const initials = a.name ? a.name.charAt(0).toUpperCase() : '?';
+                    const inTime = a.login && a.login !== '--' ? a.login : '-';
+                    const outTime = a.logout && a.logout !== '--' ? a.logout : '-';
+                    
+                    return `
+                    <div class="RECORD-CARD">
+                        <div class="RECORD-AVATAR">${initials}</div>
+                        <div class="RECORD-INFO">
+                            <div class="RECORD-NAME">${a.name}</div>
+                            <div class="RECORD-TIME">
+                                <i class="fas fa-sign-in-alt"></i> ${inTime}
+                                <i class="fas fa-sign-out-alt"></i> ${outTime}
+                            </div>
+                        </div>
+                        <span class="RECORD-BADGE ${badgeClass}">${a.status}</span>
+                    </div>
+                `}).join('');
+            } else {
+                recordsList.innerHTML = `
+                    <div class="EMPTY-STATE">
+                        <i class="fas fa-inbox"></i>
+                        <p>कोई रिकॉर्ड नहीं</p>
+                    </div>
+                `;
+            }
         }
 
-        // --- स्मार्ट लॉजिक (डुप्लीकेट चेक) ---
+        // --- SET STATUS (Quick buttons) ---
+        function SET_STATUS(status) {
+            SELECTED_STATUS = status;
+            document.getElementById('STATUS').value = status;
+            
+            // Update button active states
+            document.querySelectorAll('.STATUS-BTN').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.status === status) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Show/hide time section based on status
+            const timeSection = document.getElementById('TIME_SECTION');
+            if (status === 'ABSENT' || status === 'ON-LEAVE') {
+                timeSection.style.display = 'none';
+                document.getElementById('IN_TIME').value = '';
+                document.getElementById('OUT_TIME').value = '';
+            } else {
+                timeSection.style.display = 'block';
+            }
+        }
+
+        // --- CHECK STATUS (existing record) ---
         function CHECK_STATUS() {
             const empId = document.getElementById('EMPLOYEESELECT').value;
             const date = document.getElementById('ATTDATE').value;
@@ -243,90 +1009,70 @@
             const statusText = document.getElementById('STATUS_TEXT');
             const dot = document.getElementById('STATUS_DOT');
 
-            // रीसेट
-            if(!CURRENT_RECORD_ID) {
-                document.getElementById('IN_TIME').value = '';
-                document.getElementById('OUT_TIME').value = '';
-            }
-
+            // Reset
+            dot.className = 'STATUS-DOT';
+            
             if (!empId) {
-                statusText.innerText = "कृपया स्टाफ चुनें";
-                dot.style.background = "#CCC";
-                btn.style.display = 'none'; 
+                statusText.innerText = "स्टाफ चुनें";
+                btn.style.display = 'none';
                 return;
             }
 
-            btn.style.display = 'block'; 
+            btn.style.display = 'flex';
 
-            // चेक करें क्या आज एंट्री है? (यहाँ emp_id का मिलान staff_id से होगा)
+            // Check existing entry
             const existing = ATTENDANCE.find(a => a.emp_id === empId && a.date === date);
 
             if (existing) {
-                // एंट्री है -> अपडेट मोड
                 CURRENT_RECORD_ID = existing.id;
-                document.getElementById('STATUS').value = existing.status;
-                document.getElementById('IN_TIME').value = existing.login;
-                document.getElementById('OUT_TIME').value = existing.logout;
-
-                if (existing.status === 'ABSENT') {
-                    statusText.innerText = "आज अनुपस्थित (Absent) है";
-                    dot.style.background = "var(--DANGER)";
-                    btn.innerText = "रिकॉर्ड सुधारें";
-                    btn.className = "BTN BTN-UPDATE";
-                } else if (existing.logout === '--' || !existing.logout) {
-                    // काम पर है
-                    statusText.innerText = "काम चालू है (Working)";
-                    dot.style.background = "var(--SUCCESS)";
-                    document.getElementById('IN_TIME').disabled = true;
-                    document.getElementById('OUT_TIME').disabled = false;
-                    btn.innerText = "काम ख़त्म (Punch Out)";
-                    btn.className = "BTN BTN-OUT";
-                } else {
-                    // काम ख़त्म
-                    statusText.innerText = "ड्यूटी पूरी हो गयी";
-                    dot.style.background = "var(--PRIMARY)";
-                    btn.innerText = "रिकॉर्ड सुधारें";
-                    btn.className = "BTN BTN-UPDATE";
-                }
-
-            } else {
-                // नयी एंट्री
-                CURRENT_RECORD_ID = null;
-                statusText.innerText = "हाजिरी नहीं लगी है";
-                dot.style.background = "#CCC";
                 
-                document.getElementById('STATUS').value = 'PRESENT';
-                document.getElementById('IN_TIME').disabled = false;
-                document.getElementById('OUT_TIME').disabled = true;
+                // Fill existing data
+                SET_STATUS(existing.status);
+                document.getElementById('IN_TIME').value = existing.login !== '--' ? existing.login : '';
+                document.getElementById('OUT_TIME').value = existing.logout !== '--' ? existing.logout : '';
+
+                if (existing.status === 'ABSENT' || existing.status === 'ON-LEAVE') {
+                    statusText.innerText = existing.status === 'ABSENT' ? "अनुपस्थित है" : "छुट्टी पर है";
+                    dot.classList.add('absent');
+                    btn.className = 'SUBMIT-BTN update';
+                    btn.innerHTML = "<i class='fas fa-edit'></i><span>अपडेट करें</span>";
+                } else if (!existing.logout || existing.logout === '--') {
+                    statusText.innerText = "काम चालू है";
+                    dot.classList.add('working');
+                    btn.className = 'SUBMIT-BTN out';
+                    btn.innerHTML = "<i class='fas fa-sign-out-alt'></i><span>पंच आउट करें</span>";
+                } else {
+                    statusText.innerText = "ड्यूटी पूरी ✓";
+                    dot.classList.add('done');
+                    btn.className = 'SUBMIT-BTN update';
+                    btn.innerHTML = "<i class='fas fa-edit'></i><span>अपडेट करें</span>";
+                }
+            } else {
+                CURRENT_RECORD_ID = null;
+                statusText.innerText = "हाजिरी नहीं लगी";
+                
+                // Reset form for new entry
+                SET_STATUS('PRESENT');
                 document.getElementById('IN_TIME').value = '';
                 document.getElementById('OUT_TIME').value = '';
-
-                btn.innerText = "हाजिरी लगाएं (Punch In)";
-                btn.className = "BTN";
+                
+                btn.className = 'SUBMIT-BTN';
+                btn.innerHTML = "<i class='fas fa-check'></i><span>हाजिरी सेव करें</span>";
             }
         }
 
-        function HANDLE_MANUAL_STATUS() {
-            const s = document.getElementById('STATUS').value;
-            if (s === 'ABSENT' || s === 'ON-LEAVE') {
-                document.getElementById('IN_TIME').value = '--';
-                document.getElementById('OUT_TIME').value = '--';
-                document.getElementById('IN_TIME').disabled = true;
-                document.getElementById('OUT_TIME').disabled = true;
-            } else {
-                document.getElementById('IN_TIME').disabled = false;
-                if(CURRENT_RECORD_ID && document.getElementById('OUT_TIME').value === '') {
-                     // अगर अपडेट कर रहे हैं तो आउट टाइम खोल सकते हैं
-                }
-            }
-        }
-
-        // --- हाजिरी सबमिट ---
+        // --- SUBMIT FORM ---
         document.getElementById('ATTENDANCEFORM').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const staffId = document.getElementById('EMPLOYEESELECT').value;
             
-            // Staff table से नाम निकालें
+            const staffId = document.getElementById('EMPLOYEESELECT').value;
+            if (!staffId) {
+                SHOW_TOAST("पहले स्टाफ चुनें!");
+                return;
+            }
+
+            SHOW_LOADING();
+
             const staffObj = STAFF_LIST.find(s => s.staff_id === staffId);
             const staffName = staffObj ? staffObj.name : 'Unknown';
 
@@ -335,46 +1081,174 @@
             let inT = document.getElementById('IN_TIME').value;
             let outT = document.getElementById('OUT_TIME').value;
 
-            // डबल चेक (डुप्लीकेट रोकने के लिए)
+            // Duplicate check
             const doubleCheck = ATTENDANCE.find(a => a.emp_id === staffId && a.date === date);
             if (!CURRENT_RECORD_ID && doubleCheck) {
-                SHOW_TOAST("रुको! इसकी हाजिरी लग चुकी है।");
+                SHOW_TOAST("इसकी हाजिरी पहले से है!");
                 await FETCH_DATA();
+                HIDE_LOADING();
                 return;
             }
 
-            if (status === 'PRESENT' && !inT) inT = GET_TIME_NOW();
+            // Auto set current time for present if no in time
+            if ((status === 'PRESENT' || status === 'HALF-DAY') && !inT) {
+                inT = GET_TIME_NOW();
+            }
 
-            // हम attendance टेबल में emp_id की जगह staff_id भेज रहे हैं
             const payload = {
                 emp_id: staffId, 
                 name: staffName, 
                 status: status,
-                login: inT || '--', 
-                logout: outT || '--', 
+                login: (status === 'ABSENT' || status === 'ON-LEAVE') ? '--' : (inT || '--'), 
+                logout: (status === 'ABSENT' || status === 'ON-LEAVE') ? '--' : (outT || '--'), 
                 date: date
             };
 
-            if (CURRENT_RECORD_ID) {
-                await _SUPABASE.from('attendance').update(payload).eq('id', CURRENT_RECORD_ID);
-                SHOW_TOAST("रिकॉर्ड अपडेट हो गया!");
-            } else {
-                await _SUPABASE.from('attendance').insert([payload]);
-                SHOW_TOAST("हाजिरी लग गयी!");
+            try {
+                if (CURRENT_RECORD_ID) {
+                    await _SUPABASE.from('attendance').update(payload).eq('id', CURRENT_RECORD_ID);
+                    SHOW_TOAST("अपडेट हो गया! ✓");
+                } else {
+                    await _SUPABASE.from('attendance').insert([payload]);
+                    SHOW_TOAST("हाजिरी लग गयी! ✓");
+                }
+                await FETCH_DATA();
+            } catch(e) {
+                SHOW_TOAST("कुछ गड़बड़ हुई!");
             }
-
-            await FETCH_DATA();
+            
+            HIDE_LOADING();
         });
 
-        // --- छोटे फंक्शन ---
-        function SET_NOW(id) { document.getElementById(id).value = GET_TIME_NOW(); }
-        function GET_TIME_NOW() { return new Date().toTimeString().substring(0,5); }
+        // --- UTILITY FUNCTIONS ---
+        function SET_NOW(id) { 
+            document.getElementById(id).value = GET_TIME_NOW(); 
+        }
+        
+        function GET_TIME_NOW() { 
+            return new Date().toTimeString().substring(0,5); 
+        }
         
         function SHOW_TOAST(msg) {
             const t = document.getElementById('TOAST');
-            t.innerText = msg; t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3000);
+            t.querySelector('span').innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // --- TOGGLE HISTORY ---
+        function TOGGLE_HISTORY() {
+            const toggle = document.querySelector('.HISTORY-TOGGLE');
+            const content = document.getElementById('HISTORY_CONTENT');
+            toggle.classList.toggle('expanded');
+            content.classList.toggle('show');
+            
+            if (content.classList.contains('show')) {
+                RENDER_HISTORY();
+            }
+        }
+
+        // --- RENDER HISTORY (Grouped by Date) ---
+        function RENDER_HISTORY() {
+            const historyList = document.getElementById('HISTORY_LIST');
+            const currentDate = document.getElementById('ATTDATE').value;
+            
+            // Get all records except current date, group by date
+            const pastRecords = ATTENDANCE.filter(a => a.date !== currentDate);
+            
+            if (pastRecords.length === 0) {
+                historyList.innerHTML = `
+                    <div class="EMPTY-STATE">
+                        <i class="fas fa-calendar-times"></i>
+                        <p>कोई पुराना रिकॉर्ड नहीं</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group by date
+            const grouped = {};
+            pastRecords.forEach(record => {
+                if (!grouped[record.date]) {
+                    grouped[record.date] = [];
+                }
+                grouped[record.date].push(record);
+            });
+            
+            // Sort dates descending
+            const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+            
+            // Take last 7 dates for display
+            const displayDates = sortedDates.slice(0, 7);
+            
+            let html = '';
+            displayDates.forEach(date => {
+                const records = grouped[date];
+                const formattedDate = FORMAT_DATE_HINDI(date);
+                
+                html += `
+                    <div class="DATE-GROUP">
+                        <div class="DATE-GROUP-HEADER">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span class="date-text">${formattedDate}</span>
+                            <span class="date-count">${records.length} रिकॉर्ड</span>
+                        </div>
+                        <div class="HISTORY-RECORDS">
+                            ${records.map(a => {
+                                let statusClass = 'absent';
+                                if (a.status === 'PRESENT') statusClass = 'present';
+                                else if (a.status === 'HALF-DAY') statusClass = 'halfday';
+                                else if (a.status === 'ON-LEAVE') statusClass = 'leave';
+                                
+                                const initials = a.name ? a.name.charAt(0).toUpperCase() : '?';
+                                const inTime = a.login && a.login !== '--' ? a.login : '-';
+                                const outTime = a.logout && a.logout !== '--' ? a.logout : '-';
+                                
+                                return `
+                                    <div class="HISTORY-ITEM">
+                                        <div class="HISTORY-AVATAR">${initials}</div>
+                                        <div class="HISTORY-INFO">
+                                            <div class="HISTORY-NAME">${a.name}</div>
+                                            <div class="HISTORY-TIME">
+                                                <i class="fas fa-sign-in-alt"></i> ${inTime}
+                                                <i class="fas fa-sign-out-alt"></i> ${outTime}
+                                            </div>
+                                        </div>
+                                        <span class="HISTORY-STATUS ${statusClass}">${a.status}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Show load more if there are more dates
+            if (sortedDates.length > 7) {
+                html += `
+                    <button class="LOAD-MORE-BTN" onclick="SHOW_TOAST('${sortedDates.length - 7} और दिनों का डाटा उपलब्ध है')">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <span>${sortedDates.length - 7} और दिन देखें</span>
+                    </button>
+                `;
+            }
+            
+            historyList.innerHTML = html;
+        }
+
+        // --- FORMAT DATE IN HINDI ---
+        function FORMAT_DATE_HINDI(dateStr) {
+            const date = new Date(dateStr);
+            const days = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
+            const months = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+            
+            const dayName = days[date.getDay()];
+            const day = date.getDate();
+            const month = months[date.getMonth()];
+            
+            return `${dayName}, ${day} ${month}`;
         }
     </script>
 </body>
 </html>
+
